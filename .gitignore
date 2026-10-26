@@ -1,0 +1,65 @@
+﻿# Local environment and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+credentials*.json
+service-account*.json
+secrets.*
+.aws/
+.ssh/
+.npmrc
+.pypirc
+
+# Installed dependencies and virtual environments
+node_modules/
+venv/
+.venv/
+env/
+ENV/
+
+# Caches and generated output
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.npm-cache/
+.vite/
+dist/
+build/
+coverage/
+htmlcov/
+.coverage*
+*.egg-info/
+
+# Logs, temporary files, local databases and exports
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.sql.gz
+tmp/
+temp/
+backups/
+dumps/
+
+# Local editor and agent state
+.vscode/
+.idea/
+.codex/
+.agents/
+.DS_Store
+Thumbs.db

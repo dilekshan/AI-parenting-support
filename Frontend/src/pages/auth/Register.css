@@ -1,0 +1,72 @@
+.juv-register { box-sizing: border-box; min-height: calc(100svh - 16px); padding: 24px; display: grid; place-items: center; background: url("../../assets/images/auth-background.png") center / cover no-repeat; color: #10594b; font-family: Arial, sans-serif; }
+.juv-register * { box-sizing: border-box; }
+.juv-register__card { width: min(100%, 1000px); display: grid; grid-template-columns: 1fr 1.1fr; border: 1px solid white; border-radius: 32px; overflow: hidden; background: #fffcf6; box-shadow: 0 20px 65px #72572e18; }
+.juv-register__art { background: #fff4e3; display: flex; align-items: center; }
+.juv-register__art img { display: block; width: 100%; height: auto; aspect-ratio: 513 / 790; }
+.juv-register__panel { padding: 28px 40px; align-self: center; min-width: 0; }
+.juv-register__tabs { display: flex; padding: 5px; border-radius: 14px; background: #f1ecdf; gap: 5px; }
+.juv-register__tabs a { flex: 1; padding: 11px; text-align: center; text-decoration: none; border-radius: 10px; }
+.juv-register__tabs a[aria-current] { background: #12634e; color: white; }
+.juv-register__logo { display: block; height: 68px; width: 68px; object-fit: contain; margin: 20px auto 12px; }
+.juv-register__eyebrow { text-align: center; font-size: 10px; letter-spacing: 3px; color: #61747a; }
+.juv-register h1 { font-family: Georgia, serif; font-size: clamp(26px, 3vw, 34px); text-align: center; margin: 12px 0 20px; }
+.juv-register__progress { display: flex; list-style: none; padding: 0; margin: 0 0 22px; gap: 8px; }
+.juv-register__progress li { flex: 1; text-align: center; color: #61747a; font-size: 10px; line-height: 1.4; }
+.juv-register__progress li > span:first-child { display: block; width: 25px; height: 25px; line-height: 25px; border-radius: 50%; background: #eee9dc; margin: 0 auto 6px; }
+.juv-register__progress .is-active > span:first-child { background: #f5bf59; color: #10594b; }
+.juv-register__field { margin-top: 16px; }
+.juv-register__field label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.juv-register__field label span { font-weight: 400; color: #61747a; }
+.juv-register__field input { width: 100%; height: 48px; border: 1px solid #dfdfd2; border-radius: 12px; background: #fffefb; padding: 0 14px; color: #244d45; font: inherit; }
+.juv-register input[aria-invalid=true] { border-color: #a13728; }
+.juv-register__error { color: #a13728; font-size: 12px; margin: 6px 0; line-height: 1.5; }
+.juv-register button { font: inherit; cursor: pointer; }
+.juv-register__password { position: relative; }
+.juv-register__password input { padding-right: 48px; }
+.juv-register__eye { position: absolute; right: 4px; top: 4px; width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 8px; padding: 0; background: transparent; color: #12634e; }
+.juv-register__eye svg { width: 21px; height: 21px; }
+.juv-register__field:has(#register-confirm) + .juv-register__terms { margin-top: 47px; }
+.juv-register__terms { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.6; margin-top: 12px; }
+.juv-register__terms input { accent-color: #12634e; width: 17px; height: 17px; flex-shrink: 0; }
+.juv-register__actions { display: flex; gap: 12px; margin-top: 24px; }
+.juv-register__actions button { min-height: 50px; border-radius: 12px; font-weight: 600; }
+.juv-register__primary { flex: 1; background: #12634e; color: white; border: 0; box-shadow: 0 6px 14px #12634e20; }
+.juv-register__primary:hover { background: #0b4e3d; }
+.juv-register__back { background: transparent; border: 1px solid #b9c6b9; color: #12634e; padding: 0 22px; }
+.juv-register a { color: #14634e; font-weight: 600; text-underline-offset: 4px; }
+.juv-register :focus-visible { outline: 3px solid #edaa36; outline-offset: 3px; }
+.juv-register__review { padding: 22px; background: #f6f2e8; border-radius: 14px; }
+.juv-register__review dt { color: #61747a; font-size: 12px; margin-top: 18px; }
+.juv-register__review dt:first-child { margin-top: 0; }
+.juv-register__review dd { margin: 7px 0 0; overflow-wrap: anywhere; line-height: 1.5; }
+.juv-register__notice, .juv-register__footer { font-size: 13px; text-align: center; line-height: 1.6; color: #61736b; margin: 20px 0 0; }
+.juv-register__notice:empty { display: none; }
+@media (max-width: 760px) { .juv-register { padding: 16px; } .juv-register__panel { padding: 24px; } }
+@media (max-width: 600px) { .juv-register__card { grid-template-columns: 1fr; max-width: 430px; border-radius: 24px; } .juv-register__art { order: 2; } }
+
+/* Scope the browser margin reset to the authentication page. */
+body:has(.juv-register) { margin: 0; }
+.juv-register { min-height: 100vh; min-height: 100svh; padding: 16px; }
+.juv-register__card { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); }
+.juv-register__panel { overflow-wrap: anywhere; }
+.juv-register__field input { min-width: 0; }
+@media (min-width: 801px) {
+  .juv-register__card { min-height: min(790px, calc(100svh - 32px)); }
+  .juv-register__art { position: relative; min-width: 0; }
+  .juv-register__art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .juv-register__panel { padding: 20px 32px; }
+  .juv-register__logo { margin: 12px auto 8px; }
+  .juv-register h1 { margin: 10px 0 14px; }
+  .juv-register__progress { margin-bottom: 14px; }
+  .juv-register__field { margin-top: 12px; }
+  .juv-register__field:has(#register-confirm) + .juv-register__terms { margin-top: 16px; }
+  .juv-register__actions { margin-top: 18px; }
+  .juv-register__notice, .juv-register__footer { margin-top: 14px; }
+}
+@media (max-width: 800px) {
+  .juv-register__card { grid-template-columns: minmax(0, 1fr); max-width: 430px; }
+  .juv-register__art { order: 2; }
+  .juv-register__panel { padding: 24px; }
+}
+
+.juv-register__field input::placeholder { color: #89918e; opacity: 1; }

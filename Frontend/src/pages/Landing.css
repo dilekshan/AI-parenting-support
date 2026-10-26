@@ -1,0 +1,163 @@
+body:has(.juv-landing) { margin: 0; }
+html:has(.juv-landing) { scroll-behavior: smooth; }
+.juv-landing { --landing-header-height: max(68px, 5vw); padding-top: var(--landing-header-height); color: #fafaf7; font-family: 'Segoe UI', Arial, sans-serif; }
+.juv-landing section[id], .juv-landing #footer { scroll-margin-top: var(--landing-header-height); }
+.juv-landing *, .juv-landing *::before, .juv-landing *::after { box-sizing: border-box; }
+.juv-landing__header { height: var(--landing-header-height); background: #fcf8f1; display: flex; align-items: center; position: fixed; inset: 0 0 auto; z-index: 100; padding-inline: 7.9vw; }
+.juv-landing__brand { display: flex; align-items: center; justify-content: center; width: auto; height: 100%; }
+.juv-landing__brand img { display: block; width: 16.9vw; max-width: none; height: auto; flex-shrink: 0; }
+.juv-landing__brand img.juv-landing__original-logo { width: clamp(44px, 4.2vw, 80px); height: auto; object-fit: contain; }
+.juv-landing__nav { position: absolute; left: 35%; display: flex; align-items: center; gap: 2.6vw; color: #073b31; font-size: 1.25vw; font-weight: 600; white-space: nowrap; }
+.juv-landing__nav a { color: #e99816; text-decoration: none; position: relative; padding: .7vw .4vw; font-weight: 400; }
+.juv-landing__nav a::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: #e9a02a; }
+.juv-landing__nav a:not([href="#home"]) { color: inherit; font-weight: inherit; padding: 0; }
+.juv-landing__nav a:not([href="#home"])::after { content: none; }
+.juv-landing__hero { min-height: max(calc(100svh - 5.82vw), 50.49vw); background: linear-gradient(90deg, rgba(0, 35, 24, .68), transparent 75%), linear-gradient(0deg, rgba(0, 35, 24, .8), transparent 25%), url('../assets/images/landing-background.png') center bottom / cover no-repeat; }
+.juv-landing__content { padding: 7.65vw 0 3.3vw 7.9vw; }
+.juv-landing__eyebrow { display: flex; align-items: center; gap: 1.35vw; margin: 0 0 1.45vw; color: #ffc13c; font-size: 1.13vw; letter-spacing: .065vw; line-height: 1.5; }
+.juv-landing__eyebrow::before { content: ''; width: 2.1vw; height: 2px; background: #ffbd28; flex-shrink: 0; }
+.juv-landing h1 { margin: 0; font-size: 3.48vw; font-weight: 700; line-height: 1.15; letter-spacing: .015vw; }
+.juv-landing h1 span { display: block; color: #f6bd4e; }
+.juv-landing h1 span:first-child { color: #fafaf7; }
+.juv-landing__description { margin: 1.05vw 0 1.8vw; font-size: 1.53vw; line-height: 1.29; font-weight: 400; }
+.juv-landing__start { display: inline-flex; align-items: center; justify-content: center; gap: .65vw; width: 17.1vw; height: 4.75vw; border: 2px solid #f8c457; border-radius: 100px; background: #f2bb4c; color: #073b31; font-size: 1.65vw; font-weight: 600; text-decoration: none; }
+.juv-landing__start span { font-size: 2.1vw; line-height: 1; }
+.juv-landing__features { display: grid; grid-template-columns: repeat(4, 1fr); width: 60.6vw; margin: 3.45vw 0 0 -3.8vw; padding: 0; list-style: none; }
+.juv-landing__features li { position: relative; display: flex; flex-direction: column; align-items: center; gap: .6vw; text-align: center; font-size: 1.17vw; font-weight: 600; line-height: 1.28; }
+.juv-landing__features li + li::before { content: ''; position: absolute; left: 0; top: 1.65vw; height: 5.6vw; width: 1px; background: #ffffff66; }
+.juv-landing__icon { width: 4.3vw; height: 4.3vw; display: grid; place-items: center; border-radius: 50%; background: #084c36; color: #ffbe26; }
+.juv-landing__icon svg { width: 2.55vw; height: 2.55vw; }
+.juv-landing :focus-visible { outline: 3px solid #e9a02a; outline-offset: 5px; }
+@media (max-width: 900px) {
+  .juv-landing { --landing-header-height: 72px; }
+  .juv-landing__header { padding-inline: 5%; }
+  .juv-landing__brand { width: auto; }
+  .juv-landing__brand img { width: 193px; }
+  .juv-landing__nav { position: static; margin-left: auto; font-size: 15px; gap: 22px; }
+  .juv-landing__hero { min-height: calc(100svh - 80px); }
+  .juv-landing__content { padding: 80px 6% 45px; }
+  .juv-landing__eyebrow { font-size: 12px; margin-bottom: 22px; }
+  .juv-landing h1 { font-size: clamp(32px, 4.4vw, 40px); }
+  .juv-landing__description { max-width: 550px; font-size: 19px; margin: 22px 0 28px; }
+  .juv-landing__desktop-break { display: none; }
+  .juv-landing__start { width: 230px; height: 62px; font-size: 23px; gap: 10px; }
+  .juv-landing__start span { font-size: 30px; }
+  .juv-landing__features { width: 100%; margin: 55px 0 0; }
+  .juv-landing__features li { font-size: 15px; gap: 12px; }
+  .juv-landing__icon { width: 60px; height: 60px; }
+  .juv-landing__icon svg { width: 35px; height: 35px; }
+  .juv-landing__features li + li::before { top: 24px; height: 80px; }
+}
+@media (max-width: 600px) {
+  .juv-landing { --landing-header-height: 108px; }
+  .juv-landing__header { flex-direction: column; justify-content: center; gap: 6px; padding: 4px 16px 6px; }
+  .juv-landing__brand { height: 56px; }
+  .juv-landing__brand img { width: 185px; }
+  .juv-landing__nav { margin: 0; gap: 22px; font-size: 14px; }
+  .juv-landing__nav a { padding: 6px 2px; }
+  .juv-landing__hero { min-height: calc(100svh - 120px); background-position: 58% bottom; }
+  .juv-landing__content { padding: 55px 6% 35px; background: #002b2299; }
+  .juv-landing__eyebrow { font-size: 10px; gap: 10px; letter-spacing: .6px; }
+  .juv-landing__eyebrow::before { width: 20px; }
+  .juv-landing h1 { font-size: clamp(25px, 6.6vw, 39px); line-height: 1.2; }
+  .juv-landing__description { font-size: 18px; line-height: 1.5; }
+  .juv-landing__features { grid-template-columns: repeat(2, 1fr); gap: 30px 0; margin-top: 45px; }
+  .juv-landing__features li:nth-child(3)::before { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { html:has(.juv-landing) { scroll-behavior: auto; } }
+.juv-landing__footer { padding: 56px 7.9% 24px; background: #fcf8f1; color: #073b31; font-size: 16px; line-height: 1.65; }
+.juv-landing__footer-columns { display: grid; grid-template-columns: 1.6fr .8fr 1fr; gap: clamp(32px, 6vw, 96px); }
+.juv-landing__footer-intro { max-width: 460px; }
+.juv-landing__footer-wordmark { display: flex; align-items: center; width: 210px; height: 65px; }
+.juv-landing__footer-wordmark img { display: block; width: 250px; height: auto; margin-left: -21px; }
+.juv-landing__footer p { margin: 16px 0; }
+.juv-landing__footer .juv-landing__footer-tagline { color: #99640b; font-weight: 600; }
+.juv-landing__footer h2 { font-size: 20px; line-height: 1.4; margin: 16px 0 24px; }
+.juv-landing__footer-care { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.juv-landing__footer-care svg { width: 24px; height: 24px; flex-shrink: 0; color: #99640b; }
+.juv-landing__footer-explore a { display: block; width: fit-content; color: inherit; text-decoration: none; margin-bottom: 14px; }
+.juv-landing__footer-explore a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.juv-landing__footer-promise { list-style: none; padding: 0; margin: 0; }
+.juv-landing__footer-promise li { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.juv-landing__footer-promise svg { width: 20px; height: 20px; flex-shrink: 0; color: #527c62; }
+.juv-landing__footer-bottom { display: flex; justify-content: space-between; gap: 16px; margin-top: 36px; padding-top: 20px; border-top: 1px solid #073b3126; font-size: 14px; }
+.juv-landing__footer-bottom p { margin: 0; }
+@media (max-width: 900px) {
+  .juv-landing__footer-columns { grid-template-columns: 1fr 1fr; }
+  .juv-landing__footer-intro { grid-column: 1 / -1; }
+}
+@media (max-width: 600px) {
+  .juv-landing__footer { padding: 40px 6% 24px; }
+  .juv-landing__footer-columns { grid-template-columns: 1fr; gap: 24px; }
+  .juv-landing__footer-bottom { flex-direction: column; gap: 8px; }
+}
+
+/* Scroll state changes color and underline without shifting the approved links. */
+.juv-landing__nav a:not([aria-current]) { color: #073b31; }
+.juv-landing__nav a:not([aria-current])::after { content: none; }
+.juv-landing__nav a[aria-current] { color: #e99816; }
+.juv-landing__nav a[aria-current]::after { content: ''; position: absolute; bottom: -.35em; left: 0; right: 0; height: 2px; background: #e9a02a; }
+.juv-landing__nav a[href="#home"][aria-current]::after { bottom: 0; }
+.juv-landing__how { padding: 1.8vw 4.5% 1.8vw; background: #fcf8f1; color: #073b31; text-align: center; }
+.juv-landing__section-kicker { display: flex; align-items: center; justify-content: center; gap: 1.4vw; margin: 0 0 .8vw; color: #e99c14; font-size: clamp(12px, 1.5vw, 23px); }
+.juv-landing__section-kicker::before, .juv-landing__how .juv-landing__section-kicker::after { content: ''; width: 3vw; height: 1px; background: currentColor; }
+.juv-landing__how h2, .juv-landing__about h2 { font-size: clamp(28px, 3.65vw, 58px); line-height: 1.15; margin: 0 0 1vw; }
+.juv-landing__how-intro { color: #536779; font-size: clamp(16px, 1.7vw, 26px); line-height: 1.45; margin: 0 auto 2.2vw; }
+.juv-landing__steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5vw; list-style: none; margin: 0; padding: 0; }
+.juv-landing__steps li { min-width: 0; position: relative; }
+.juv-landing__steps li:not(:last-child)::after { content: '→'; position: absolute; top: 9.7vw; right: -4.3vw; color: #efa709; font-size: 4.5vw; font-weight: 300; line-height: 1; }
+.juv-landing__step-art { position: relative; height: 23vw; margin: 0 0 3vw; display: grid; place-items: center; isolation: isolate; }
+.juv-landing__step-art::before { content: ''; position: absolute; inset: 1vw 0 0; z-index: -1; background: #e8ebd4; border-radius: 47% 53% 37% 63% / 53% 35% 65% 47%; opacity: .65; }
+.juv-landing__step-art img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.juv-landing__steps li:first-child .juv-landing__step-art img { transform: translateY(-18px); }
+.juv-landing__step-number { position: absolute; left: 50%; bottom: -2vw; transform: translateX(-50%); display: grid; place-items: center; width: 4.6vw; height: 4.6vw; border-radius: 50%; background: #ffca49; border: .45vw solid #fcf8f1; color: #073b31; font-weight: 700; font-size: 2vw; }
+.juv-landing__steps h3 { font-size: clamp(18px, 2vw, 31px); line-height: 1.25; margin: 0 0 .65vw; }
+.juv-landing__steps p { color: #536779; font-size: clamp(16px, 1.6vw, 25px); line-height: 1.4; margin: 0 auto; max-width: 28ch; }
+.juv-landing__about { display: grid; grid-template-columns: 1.1fr 1fr; align-items: center; gap: 2vw; padding: 2vw 3% 1.8vw 7.9%; background: radial-gradient(ellipse at right, #164d3e, #00392b 70%); color: #fafaf7; }
+.juv-landing__about-copy { min-width: 0; }
+.juv-landing__about .juv-landing__section-kicker { justify-content: flex-start; color: #ffc53d; font-size: clamp(12px, 1.2vw, 19px); margin-bottom: 1.5vw; }
+.juv-landing__about h2 span { color: #ffca49; }
+.juv-landing__about-copy > p:not(.juv-landing__section-kicker) { font-size: clamp(16px, 1.6vw, 25px); line-height: 1.35; margin: 1.3vw 0; }
+.juv-landing__learn { display: inline-flex; align-items: center; justify-content: center; gap: 1vw; background: #ffca49; color: #073b31; border: 0; border-radius: 100px; padding: 1.3vw 3.3vw; font: inherit; font-size: clamp(16px, 1.6vw, 25px); font-weight: 700; cursor: not-allowed; }
+.juv-landing__learn span { font-size: 1.4em; line-height: 1; }
+.juv-landing__about-art { position: relative; isolation: isolate; min-width: 0; }
+.juv-landing__about-art img { display: block; width: 100%; height: auto; object-fit: contain; }
+.juv-landing__footer { padding: 2.5vw 5.4% 2vw; font-size: clamp(13px, 1.3vw, 20px); }
+.juv-landing__footer-columns { grid-template-columns: 1.45fr 1fr 1fr; gap: 3.5vw; align-items: start; }
+.juv-landing__footer-columns > :not(:first-child) { border-left: 1px solid #e5b65a88; padding-left: 6vw; }
+.juv-landing__footer-wordmark { width: auto; height: 4.5vw; min-height: 48px; }
+.juv-landing__footer-wordmark img { width: 17vw; margin-left: 0; }
+.juv-landing__footer-wordmark img.juv-landing__footer-logo { width: 4.5vw; height: auto; }
+.juv-landing__footer p { margin: 1vw 0; }
+.juv-landing__footer h2 { font-size: clamp(16px, 1.5vw, 23px); margin: 1vw 0 1.7vw; }
+.juv-landing__footer-explore a, .juv-landing__footer-promise li { margin-bottom: .8vw; }
+.juv-landing__footer-care { font-size: clamp(12px, 1.15vw, 18px); }
+.juv-landing__footer-bottom { margin-top: 2vw; padding-top: 1.5vw; border-color: #e5b65a88; font-size: inherit; }
+.juv-landing__footer-bottom p { margin: 0; }
+@media (max-width: 700px) {
+  .juv-landing__how { padding: 24px 6%; }
+  .juv-landing__section-kicker { margin-bottom: 12px; gap: 12px; }
+  .juv-landing__section-kicker::before, .juv-landing__how .juv-landing__section-kicker::after { width: 28px; }
+  .juv-landing__how h2, .juv-landing__about h2 { margin-bottom: 16px; }
+  .juv-landing__wide-break { display: none; }
+  .juv-landing__steps { grid-template-columns: 1fr; gap: 36px; margin-top: 24px; }
+  .juv-landing__steps li:not(:last-child)::after { content: none; }
+  .juv-landing__step-art { width: min(100%, 300px); height: 230px; margin: 0 auto 30px; }
+  .juv-landing__step-number { width: 46px; height: 46px; bottom: -20px; border-width: 4px; font-size: 22px; }
+  .juv-landing__steps h3 { margin-bottom: 10px; }
+  .juv-landing__about { grid-template-columns: 1fr; gap: 32px; padding: 28px 6%; }
+  .juv-landing__about-copy > p:not(.juv-landing__section-kicker) { margin: 18px 0; }
+  .juv-landing__learn { padding: 14px 32px; gap: 12px; }
+  .juv-landing__about-art { width: min(100%, 440px); margin: 0 auto; }
+  .juv-landing__footer { padding: 30px 6% 24px; }
+  .juv-landing__footer-columns { grid-template-columns: 1fr; gap: 24px; }
+  .juv-landing__footer-columns > :not(:first-child) { border-left: 0; padding-left: 0; }
+  .juv-landing__footer-wordmark img { width: 180px; }
+  .juv-landing__footer-wordmark img.juv-landing__footer-logo { width: 48px; }
+  .juv-landing__footer p { margin: 12px 0; }
+  .juv-landing__footer h2 { margin: 0 0 16px; }
+  .juv-landing__footer-explore a, .juv-landing__footer-promise li { margin-bottom: 12px; }
+  .juv-landing__footer-bottom { flex-direction: column; gap: 8px; margin-top: 24px; padding-top: 16px; }
+  .juv-landing__footer-bottom p { margin: 0; }
+}
+@media (min-width: 701px) { .juv-landing__footer-intro { grid-column: auto; } }
