@@ -44,3 +44,52 @@ test('sends correct login and registration payloads and bearer token', async () 
   await assert.rejects(auth.login({email:'p@example.com',password:'wrong'}));
   assert.equal(await auth.getCurrentUser(),null);
 });
+
+test('timeout aborts a stalled request and also bounds a stalled response body', async t => {
+  const oldFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = oldFetch; });
+  for (const stalledBody of [false, true]) {
+    let signal;
+    globalThis.fetch = async (_url, options) => {
+      signal = options.signal;
+      if (stalledBody) return { ok: true, json: () => new Promise(() => {}) };
+      return new Promise(() => {});
+    };
+    await assert.rejects(apiRequest('/api/auth/login', { timeoutMs: 20 }), /timed out/);
+    assert.equal(signal.aborted, true);
+  }
+});
+
+test('login handler resets loading and verifies roles before navigating', async () => {
+  const source = readFileSync(new URL('../src/pages/auth/Login.jsx', import.meta.url), 'utf8');
+  const handler = source.slice(source.indexOf('  async function handleSubmit'), source.indexOf('\n  return ('));
+  for (const role of ['admin', 'parent', 'unknown', 'failure']) {
+    let loading = false, notice = '', destination;
+    const submitting = { current: false };
+    const make = new Function('submitting', 'loading', 'FormData', 'setLoading', 'setNotice', 'login', 'getCurrentUser', 'logout', 'onLogin', 'navigate', handler + '; return handleSubmit;');
+    const run = make(submitting, false, class { get() { return 'fixture'; } }, value => { loading = value; }, value => { notice = value; }, async () => {
+      if (role === 'failure') throw new Error('Unable to reach the server. Please try again.');
+    }, async () => ({ role, account_status: 'active' }), () => {}, null, path => { destination = path; });
+    await run({ preventDefault() {}, currentTarget: {} });
+    assert.equal(loading, false);
+    assert.equal(submitting.current, false);
+    if (role === 'admin' || role === 'parent') assert.equal(destination, role === 'admin' ? '/admin/dashboard' : '/parent/home');
+    else { assert.equal(destination, undefined); assert.notEqual(notice, 'Signing in...'); }
+  }
+});
+
+test('profile upload sends image bytes with JWT and preserves binary content type', async t => {
+  const oldFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = oldFetch; auth.logout(); });
+  globalThis.fetch = async () => reply({access_token:'fixture-token',token_type:'bearer',user:{user_id:1}});
+  await auth.login({email:'fixture@example.com',password:'fixture'});
+  const file = new Blob(['fixture-image-bytes']);
+  globalThis.fetch = async (url, options) => {
+    assert.ok(url.endsWith('/api/auth/me/profile-photo'));
+    assert.equal(options.body, file);
+    assert.equal(options.headers['Content-Type'], 'application/octet-stream');
+    assert.equal(options.headers.Authorization, 'Bearer fixture-token');
+    return reply({profile_photo_url:'/api/profile-photos/fixture.webp'});
+  };
+  assert.equal((await auth.uploadProfilePhoto(file)).profile_photo_url, '/api/profile-photos/fixture.webp');
+});

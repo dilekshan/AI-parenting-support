@@ -14,6 +14,7 @@ html:has(.juv-landing) { scroll-behavior: smooth; }
 .juv-landing__nav a:not([href="#home"])::after { content: none; }
 .juv-landing__hero { min-height: max(calc(100svh - 5.82vw), 50.49vw); background: linear-gradient(90deg, rgba(0, 35, 24, .68), transparent 75%), linear-gradient(0deg, rgba(0, 35, 24, .8), transparent 25%), url('../assets/images/landing-background.png') center bottom / cover no-repeat; }
 .juv-landing__content { padding: 7.65vw 0 3.3vw 7.9vw; }
+.juv-landing__hero > .juv-landing__content > * { position: relative; top: -40px; }
 .juv-landing__eyebrow { display: flex; align-items: center; gap: 1.35vw; margin: 0 0 1.45vw; color: #ffc13c; font-size: 1.13vw; letter-spacing: .065vw; line-height: 1.5; }
 .juv-landing__eyebrow::before { content: ''; width: 2.1vw; height: 2px; background: #ffbd28; flex-shrink: 0; }
 .juv-landing h1 { margin: 0; font-size: 3.48vw; font-weight: 700; line-height: 1.15; letter-spacing: .015vw; }
@@ -25,8 +26,12 @@ html:has(.juv-landing) { scroll-behavior: smooth; }
 .juv-landing__features { display: grid; grid-template-columns: repeat(4, 1fr); width: 60.6vw; margin: 3.45vw 0 0 -3.8vw; padding: 0; list-style: none; }
 .juv-landing__features li { position: relative; display: flex; flex-direction: column; align-items: center; gap: .6vw; text-align: center; font-size: 1.17vw; font-weight: 600; line-height: 1.28; }
 .juv-landing__features li + li::before { content: ''; position: absolute; left: 0; top: 1.65vw; height: 5.6vw; width: 1px; background: #ffffff66; }
-.juv-landing__icon { width: 4.3vw; height: 4.3vw; display: grid; place-items: center; border-radius: 50%; background: #084c36; color: #ffbe26; }
-.juv-landing__icon svg { width: 2.55vw; height: 2.55vw; }
+.juv-landing__icon { width: 4.3vw; height: 4.3vw; display: grid; place-items: center; border-radius: 50%; background: #F4C15A; color: #004D3B; }
+/* Keep the original layout box so icon centers and text spacing stay fixed. */
+.juv-landing__hero .juv-landing__icon { position: relative; background: transparent; color: #004D3B; }
+.juv-landing__hero .juv-landing__icon::before { content: ''; position: absolute; inset: 7.5%; border-radius: 50%; background: #F4C15A; }
+.juv-landing__hero .juv-landing__icon svg { position: relative; }
+.juv-landing__icon svg { width: 2.1675vw; height: 2.1675vw; }
 .juv-landing :focus-visible { outline: 3px solid #e9a02a; outline-offset: 5px; }
 @media (max-width: 900px) {
   .juv-landing { --landing-header-height: 72px; }
@@ -45,7 +50,7 @@ html:has(.juv-landing) { scroll-behavior: smooth; }
   .juv-landing__features { width: 100%; margin: 55px 0 0; }
   .juv-landing__features li { font-size: 15px; gap: 12px; }
   .juv-landing__icon { width: 60px; height: 60px; }
-  .juv-landing__icon svg { width: 35px; height: 35px; }
+  .juv-landing__icon svg { width: 29.75px; height: 29.75px; }
   .juv-landing__features li + li::before { top: 24px; height: 80px; }
 }
 @media (max-width: 600px) {

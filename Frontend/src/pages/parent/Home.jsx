@@ -1,7 +1,11 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { getParentDashboard } from '../../services/parentDashboardService.js';
+import { Link, useNavigate } from 'react-router-dom';
+import { logout } from '../../services/authService.js';
 import logo from '../../assets/logo/985dc272-7657-42a7-aa1e-fd9ad04c085f.png';
 import wordmark from '../../assets/logo/juvcare-wordmark.png';
 import './Home.css';
+import ProfileAvatar from '../../components/common/ProfileAvatar.jsx';
 
 function Icon({ name, className = '' }) {
   const shapes = {
@@ -19,6 +23,7 @@ function Icon({ name, className = '' }) {
     leaf: <><path d="M12 22C1 18 2 8 3 4c7 1 10 8 9 18Zm0 0C22 18 22 8 21 4c-7 1-10 8-9 18Zm0-8V2" /></>,
     clock: <><circle cx="12" cy="12" r="9" /><path d="M12 6v6l4 2" /></>,
     sun: <><circle cx="12" cy="12" r="5" /><path d="M12 1v3m0 16v3M1 12h3m16 0h3M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2" /></>,
+    logout: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></>,
     check: <path d="m5 12 4 4 10-10" />,
   };
   return <svg className={`parent-home__icon ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{shapes[name]}</svg>;
@@ -32,6 +37,33 @@ function Placeholder({ className = '', label }) {
 }
 
 export default function Home({ user }) {
+  const navigate = useNavigate();
+  const [dashboard, setDashboard] = useState(null);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    let active = true;
+    setDashboard(null); setError('');
+    getParentDashboard(user?.user_id).then(data => { if (active) setDashboard(data); }).catch(reason => { if (active) setError(reason.message); });
+    return () => { active = false; };
+  }, [user?.user_id]);
+  const loading = !dashboard && !error;
+  const message = (section, empty) => loading ? 'Loading...' : error ? `Unavailable: ${error}` : dashboard?.unavailable?.[section] ? `${empty} ${dashboard.unavailable[section]}` : empty;
+  const progress = dashboard?.progress;
+  const plans = [...(dashboard?.plans || [])].sort((a, b) => String(b.start_date || '').localeCompare(String(a.start_date || '')));
+  const plan = plans[0];
+  const planActivities = (dashboard?.activities || []).filter(item => plan && item.plan_id === plan.plan_id);
+  const today = new Date().toLocaleDateString('en-CA');
+  const activity = planActivities.find(item => String(item.date || '').slice(0, 10) === today) || [...planActivities].sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))[0];
+  const guidance = [...(dashboard?.guidance || [])].sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))[0];
+  const formatDate = value => value ? new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '?';
+  const days = Array.from({ length: 7 }, (_, index) => {
+    if (!plan?.start_date) return null;
+    const day = new Date(plan.start_date); day.setDate(day.getDate() + index); return day;
+  });
+  function handleLogout() {
+    logout();
+    navigate('/login', { replace: true });
+  }
   const parentName = user?.name?.trim() || 'Parent';
   const greetingName = parentName.split(/\s+/)[0];
   return <div className="parent-home">
@@ -42,8 +74,9 @@ export default function Home({ user }) {
         {[['people', 'Children'], ['calendar', 'Parenting Plans'], ['spark', 'AI Guidance'], ['game', 'Activities'], ['book', 'Library']].map(([icon, text]) => <PreviewButton key={text}><Icon name={icon} />{text}</PreviewButton>)}
       </nav>
       <div className="parent-home__search"><Icon name="search" /><input aria-label="Search (preview only)" placeholder="Search guidance, activities, stories..." disabled /></div>
-      <PreviewButton className="parent-home__notification" aria-label="Notifications (preview only)"><Icon name="bell" /><span>3</span></PreviewButton>
-      <PreviewButton className="parent-home__profile"><Placeholder label="Parent portrait placeholder" /><span>{parentName}<small>Parent</small></span></PreviewButton>
+      <PreviewButton className="parent-home__notification" aria-label="Notifications (preview only)"><Icon name="bell" /><span aria-label="Notification count unavailable">?</span></PreviewButton>
+      <div className="parent-home__profile"><ProfileAvatar user={user} className="parent-home__placeholder" /><span title={parentName}>{user?.name?.trim()}</span></div>
+      <button type="button" className="parent-home__logout" aria-label="Logout" title="Logout" onClick={handleLogout}><Icon name="logout" /></button>
     </header>
     <aside className="parent-home__welcome">
       <p className="parent-home__eyebrow">A BRIGHTER TOMORROW</p>
@@ -57,25 +90,27 @@ export default function Home({ user }) {
         <div className="parent-home__left-stack">
           <section className="parent-home__card parent-home__children" aria-labelledby="children-title">
             <div className="parent-home__card-heading"><h2 id="children-title"><Icon name="people" />My Children</h2><PreviewButton className="parent-home__add">＋ Add Child</PreviewButton></div>
-            {[[ 'Aarav', '6', '1'], ['Kavin', '7', '2']].map(([name, age, grade]) => <PreviewButton className="parent-home__child" key={name}><Placeholder label={`${name} portrait placeholder`} /><span><strong>{name}</strong><small>{age} years old <span className="parent-home__divider">|</span> Grade {grade}</small></span><span className="parent-home__chevron">›</span></PreviewButton>)}
+            {dashboard?.children?.length ? dashboard.children.map((child, index) => <PreviewButton className="parent-home__child" key={index}><Placeholder label="Child portrait placeholder" /><span><strong>{child.name || 'Name unavailable'}</strong><small>{child.age == null ? 'Age unavailable' : `${child.age} years old`}{child.grade != null && <> <span className="parent-home__divider">|</span> Grade {child.grade}</>}</small></span><span className="parent-home__chevron">?</span></PreviewButton>) : <p role="status">{message('children', 'No children added yet.')}</p>}
           </section>
           <section className="parent-home__card parent-home__progress" aria-labelledby="progress-title">
             <div className="parent-home__card-heading"><h2 id="progress-title"><Icon name="chart" />Child's Progress</h2><PreviewButton className="parent-home__period">This Week ⌄</PreviewButton></div>
-            <div className="parent-home__progress-body"><div className="parent-home__ring" role="img" aria-label="Sample progress: 3 of 5 activities completed"><div><strong>3/5</strong><span>Activities<br />Completed</span></div></div><ul className="parent-home__statuses">{[['done', '✓', '2 Completed'], ['ongoing', '◷', '1 In Progress'], ['pending', '›', '2 Pending'], ['skipped', '×', '0 Skipped']].map(([style, symbol, text]) => <li key={style}><span className={style}>{symbol}</span>{text}</li>)}</ul></div>
+            <div className="parent-home__progress-body"><div className="parent-home__ring" role="img" aria-label={progress ? `${progress.completed} of ${progress.total} activities completed` : 'Progress unavailable'} style={{ background: `conic-gradient(from -5deg, #205d4e 0%, #073c33 ${progress?.total ? progress.completed / progress.total * 100 : 0}%, #ece0ce 0%)` }}><div><strong>{progress ? `${progress.completed}/${progress.total}` : '?'}</strong><span>Activities<br />Completed</span></div></div><ul className="parent-home__statuses">{[['done', '?', 'completed', 'Completed'], ['ongoing', '?', 'in_progress', 'In Progress'], ['pending', '?', 'pending', 'Pending'], ['skipped', '?', 'skipped', 'Skipped']].map(([style, symbol, key, text]) => <li key={style}><span className={style}>{symbol}</span>{progress ? progress[key] : '?'} {text}</li>)}</ul></div>
+            {!progress && <p role="status">{message('progress', 'Progress unavailable.')}</p>}
+            {progress?.total === 0 && <p role="status">No activities available this week.</p>}
             <PreviewButton className="parent-home__details">View Progress Details <span>→</span></PreviewButton>
           </section>
           <section className="parent-home__card parent-home__quick" aria-labelledby="quick-title"><h2 id="quick-title"><Icon name="bolt" />Quick Actions</h2><div className="parent-home__tiles">{[['robot', 'AI Guidance'], ['calendar', 'Parenting Plan'], ['game', 'Child Activities'], ['book', 'Stories'], ['leaf', 'Calm Corner'], ['book', 'Educational Content']].map(([icon, label]) => <PreviewButton key={label}><Icon name={icon} /><span>{label}</span></PreviewButton>)}</div></section>
         </div>
         <div className="parent-home__right-stack">
           <section className="parent-home__card parent-home__plan" aria-labelledby="plan-title">
-            <div className="parent-home__plan-heading"><Icon name="calendar" /><div><h2 id="plan-title">Today's 7-Day Plan</h2><p>Simple daily activities for a happier tomorrow</p></div><div className="parent-home__date"><PreviewButton aria-label="Previous week">‹</PreviewButton><span>14 Apr 2025</span><PreviewButton aria-label="Next week">›</PreviewButton></div><PreviewButton className="parent-home__soft-button">View Full Plan <span>→</span></PreviewButton></div>
-            <div className="parent-home__days" aria-label="Sample week, 14–20 April 2025">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => <PreviewButton key={day} className={index === 0 ? 'is-selected' : ''}>{day}<strong>{14 + index}</strong></PreviewButton>)}</div>
-            <div className="parent-home__activity"><Placeholder label="Boy meditating" /><div className="parent-home__activity-copy"><span className="parent-home__category"><Icon name="calendar" />Feelings &amp; Emotions</span><h3>Listen with Patience</h3><div className="parent-home__activity-meta"><span><Icon name="clock" />15 minutes</span><span><Icon name="sun" />Evening</span></div><p>A simple activity to help your child express their feelings and feel heard.</p></div><PreviewButton className="parent-home__round" aria-label="Open sample activity">→</PreviewButton></div>
-            <div className="parent-home__dots" aria-label="Sample activity 1 of 4"><span /><span /><span /><span /></div>
+            <div className="parent-home__plan-heading"><Icon name="calendar" /><div><h2 id="plan-title">Today's 7-Day Plan</h2><p>Simple daily activities for a happier tomorrow</p></div><div className="parent-home__date"><PreviewButton aria-label="Previous week">‹</PreviewButton><span>{formatDate(plan?.start_date)}</span><PreviewButton aria-label="Next week">›</PreviewButton></div><PreviewButton className="parent-home__soft-button">View Full Plan <span>→</span></PreviewButton></div>
+            <div className="parent-home__days" aria-label="Plan dates">{days.map((day, index) => <PreviewButton key={index} className={day?.toDateString() === new Date().toDateString() ? 'is-selected' : ''}>{day ? day.toLocaleDateString('en-GB', { weekday: 'short' }) : '?'}<strong>{day ? day.getDate() : '?'}</strong></PreviewButton>)}</div>
+            <div className="parent-home__activity"><Placeholder label="Boy meditating" /><div className="parent-home__activity-copy"><span className="parent-home__category"><Icon name="calendar" />{activity?.category || activity?.status || '?'}</span><h3>{activity?.title || '?'}</h3><div className="parent-home__activity-meta"><span><Icon name="clock" />{activity?.duration != null ? `${activity.duration} minutes` : '?'}</span><span><Icon name="sun" />{activity?.time || '?'}</span></div><p>{activity?.description || (activity ? '' : plan ? message('activities', 'No activities available yet.') : message('plans', 'No parenting plan available yet.'))}{activity?.date && <> {formatDate(activity.date)}</>}{activity?.status && <> ? {activity.status}</>}</p></div><PreviewButton className="parent-home__round" aria-label="Open activity">?</PreviewButton></div>
+            <div className="parent-home__dots" aria-label="Activity availability">{planActivities.map((_, index) => <span key={index} />)}</div>
           </section>
-          <section className="parent-home__card parent-home__guidance" aria-labelledby="guidance-title"><div className="parent-home__guidance-heading"><Icon name="spark" /><div><h2 id="guidance-title">AI Guidance for You</h2><p>Get personalised advice based on your child's needs</p></div></div><div className="parent-home__guidance-body"><div className="parent-home__guidance-copy"><h3>Building<br /><span>Calm Connections</span></h3><p>Practical ways to understand your child's behaviour and create a more peaceful home.</p><PreviewButton className="parent-home__coral-button">Get Guidance <span>→</span></PreviewButton></div><div className="parent-home__guidance-art" role="img" aria-label="Mother embracing her child" /><ul>{['Understand behaviour', 'Get practical tips', 'Improve communication', 'Build positive routines'].map(item => <li key={item}><Icon name="check" />{item}</li>)}</ul></div></section>
+          <section className="parent-home__card parent-home__guidance" aria-labelledby="guidance-title"><div className="parent-home__guidance-heading"><Icon name="spark" /><div><h2 id="guidance-title">AI Guidance for You</h2><p>Get personalised advice based on your child's needs</p></div></div><div className="parent-home__guidance-body"><div className="parent-home__guidance-copy"><h3>{guidance?.title || "?"}</h3><p>{guidance?.description || (guidance ? "Guidance text unavailable." : message("guidance", "No AI guidance available yet."))}</p><PreviewButton className="parent-home__coral-button">Get Guidance <span>→</span></PreviewButton></div><div className="parent-home__guidance-art" role="img" aria-label="Mother embracing her child" /><ul>{guidance?.created_at && <li><Icon name="check" />{formatDate(guidance.created_at)}</li>}</ul></div></section>
         </div>
-        <section className="parent-home__card parent-home__learning" aria-labelledby="learning-title"><div className="parent-home__card-heading"><div className="parent-home__learning-heading"><Icon name="book" /><div><h2 id="learning-title">Learning for a Brighter Future</h2><p>Stories, activities and tips based on your child's age and interests.</p></div></div><PreviewButton className="parent-home__soft-button">See All <span>→</span></PreviewButton></div><div className="parent-home__resources">{[['Story', '3–5 years', 'A Little Cat Learns to Take a Break'], ['Tips', 'For Parents', 'Everyday Kindness Tips for Parents'], ['Video', '4 min', 'Calm Down Breathing for Kids']].map(([type, age, title]) => <article key={title}><Placeholder label={`${type} illustration placeholder`} /><div><p><span>{type}</span> · {age}</p><h3>{title}</h3><PreviewButton aria-label={`Open ${title}`}>→</PreviewButton></div></article>)}</div></section>
+        <section className="parent-home__card parent-home__learning" aria-labelledby="learning-title"><div className="parent-home__card-heading"><div className="parent-home__learning-heading"><Icon name="book" /><div><h2 id="learning-title">Learning for a Brighter Future</h2><p>Stories, activities and tips based on your child's age and interests.</p></div></div><PreviewButton className="parent-home__soft-button">See All <span>→</span></PreviewButton></div><div className="parent-home__resources">{[0, 1, 2].map(index => <article key={index}><Placeholder label="Learning illustration placeholder" /><div><p>?</p><h3>{index === 0 ? message('learning', 'No learning content available yet.') : '?'}</h3><PreviewButton aria-label="Open learning content">?</PreviewButton></div></article>)}</div></section>
       </div>
     </main>
   </div>;

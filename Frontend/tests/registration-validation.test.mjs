@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {validatePersonalDetails as validate, validateAccountSecurity} from '../src/services/registrationValidation.js';
-const base = {name:' Parent ',email:' name@example.com ',phone:''};
+const base = {name:' Parent ',email:'name@example.com ',phone:''};
 for (const [field,value] of [['name',''],['name','   '],['email','nameexample.com'],['email','name@'],['email','a..b@example.com'],['email','a b@example.com'],['email','a@-bad.com'],['phone','letters'],['phone','07123'],['phone','0812345678'],['phone','+947123456789']]) {
  test(`blocks Step 1: ${field}=${value}`,()=>{ const result=validate({...base,[field]:value}); assert.equal(result.valid,false);assert.ok(result.errors[field]); });
 }
@@ -55,4 +55,28 @@ test('password rules and actual Step 2 Next handler', async()=>{
    assert.equal(nextStep,valid?2:1);
   }
  }
+});
+
+test('registration email starts with an ASCII letter and normalizes uppercase', () => {
+  for (const email of ['user@gmail.com', 'user123@gmail.com', 'abc2026@yahoo.com', 'USER@GMAIL.COM', 'User123@Gmail.com']) {
+    const result = validate({...base, email});
+    assert.equal(result.valid, true);
+    assert.equal(result.normalized.email, email.toLowerCase());
+  }
+  for (const email of ['123user@gmail.com', '9abc@yahoo.com', '@user@gmail.com', '_user@gmail.com', '+user@gmail.com', ' user@gmail.com', '\tuser@gmail.com', '\u212Auser@gmail.com', 'user@', 'user..abc@gmail.com']) {
+    const result = validate({...base, email});
+    assert.equal(result.valid, false);
+    assert.ok(result.errors.email);
+  }
+});
+
+test('actual email change handler lowercases only email and preserves leading spaces for validation', () => {
+  const source = readFileSync(new URL('../src/pages/auth/Register.jsx', import.meta.url), 'utf8');
+  const body = source.match(/function change\(event\) \{([\s\S]*?)\n  \}/)[1];
+  const handler = new Function('event', 'setValues', 'setErrors', 'setNotice', body);
+  for (const [name, value, expected] of [['email', 'User123@Gmail.com', 'user123@gmail.com'], ['email', ' USER@GMAIL.COM', ' user@gmail.com'], ['name', 'Test Parent', 'Test Parent'], ['phone', '0712345678', '0712345678']]) {
+    let values = {};
+    handler({target:{name, value, type:'text'}}, update => {values=update(values);}, () => {}, () => {});
+    assert.equal(values[name], expected);
+  }
 });

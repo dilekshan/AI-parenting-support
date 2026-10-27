@@ -24,7 +24,6 @@ body:has(.parent-home) { margin: 0; }
 .parent-home__notification { position: relative; background: transparent; color: var(--navy); padding: 8px; }
 .parent-home__notification > span { position: absolute; top: -1px; right: 0; border-radius: 50%; background: #e84a2a; color: white; font-size: 10px; width: 16px; height: 16px; line-height: 16px; }
 .parent-home__profile { display: flex; align-items: center; gap: 12px; background: transparent; color: var(--navy); text-align: left; font-size: 14px; }
-.parent-home__profile small { display: block; color: #64809c; margin-top: 5px; }
 .parent-home__profile .parent-home__placeholder { width: 46px; height: 46px; border-radius: 50%; }
 .parent-home__placeholder { background: #e7e1d5; border: 1px solid #ded7c9; min-width: 0; }
 .parent-home__welcome { --welcome-unit: 1px; container-type: inline-size; min-width: 0; background: linear-gradient(180deg, #003b32 0%, #003b32 14%, #003b32de 26%, #003b3299 40%, #003b3200 62%), url('../../assets/images/dashboard-sidebar.png') center bottom / cover no-repeat, #003b32; color: #fffdf6; padding: 34px 14.8% 0; }
@@ -111,7 +110,7 @@ body:has(.parent-home) { margin: 0; }
 .parent-home__guidance-body { min-height: 249px; }
 .parent-home__guidance-body ul { font-size: 10px; padding: 16px; }
 .parent-home__guidance-body li { margin: 12px 0; }
-.parent-home__profile > span:first-of-type { max-width: 100px; overflow-wrap: anywhere; }
+.parent-home__profile > span:last-child { max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .parent-home__activity-copy { min-width: 0; }
 @media (min-width: 1401px) {
   .parent-home__header { height: 69px; }
@@ -180,3 +179,8 @@ body:has(.parent-home) { margin: 0; }
   .parent-home__welcome h1 { font-size: min(54px, 18cqi); overflow-wrap: normal; }
   .parent-home__welcome blockquote { width: auto; }
 }
+
+.parent-home__logout { display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 32px; padding: 4px; margin-left: -8px; background: transparent; color: var(--navy); cursor: pointer; }
+.parent-home__logout .parent-home__icon { width: 20px; height: 20px; }
+
+.parent-home__profile { padding: 2px 6px; }

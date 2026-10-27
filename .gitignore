@@ -63,3 +63,6 @@ dumps/
 .agents/
 .DS_Store
 Thumbs.db
+
+# Private runtime profile uploads
+Backend/uploads/

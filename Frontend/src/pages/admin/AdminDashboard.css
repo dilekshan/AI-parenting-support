@@ -1,4 +1,4 @@
-﻿body:has(.admin-dashboard) { margin: 0; overflow: hidden; }
+ï»¿body:has(.admin-dashboard) { margin: 0; overflow: hidden; }
 .admin-dashboard { box-sizing: border-box; --admin-green: #006b54; --admin-navy: #071853; --admin-muted: #7184aa; height: 100vh; height: 100dvh; display: grid; grid-template-columns: clamp(250px, 20.8vw, 348px) minmax(0, 1fr); grid-template-rows: 78px minmax(0, 1fr); gap: 22px; padding: 18px; color: var(--admin-navy); background: radial-gradient(ellipse at top, #fffdf8, #f8f4e7); font-family: Arial, sans-serif; }
 .admin-dashboard *, .admin-dashboard *::before, .admin-dashboard *::after { box-sizing: border-box; }
 .admin-dashboard button, .admin-dashboard input { font: inherit; }
@@ -22,7 +22,7 @@
 .admin-dashboard__notifications svg { width: 32px; height: 32px; }
 .admin-dashboard__notifications > span { position: absolute; width: 12px; height: 12px; background: #ff4a32; border: 2px solid white; border-radius: 50%; top: 1px; right: 2px; }
 .admin-dashboard__profile { display: flex; align-items: center; gap: 16px; padding-left: 22px; border-left: 1px solid #e2e7ee; font-size: 20px; min-width: 0; }
-.admin-dashboard__profile > span:last-child { max-width: 180px; overflow-wrap: anywhere; }
+.admin-dashboard__profile > span:nth-child(2) { min-width: 0; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .admin-dashboard__avatar { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 62px; height: 62px; background: #fff0d8; color: #076950; border-radius: 50%; font-size: 24px; font-weight: 700; }
 .admin-dashboard__main { min-height: 0; min-width: 0; overflow-y: auto; padding: 10px 4px 12px 8px; overscroll-behavior-y: contain; }
 .admin-dashboard__intro { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin: 0 10px 30px; }
@@ -122,3 +122,6 @@
   .admin-dashboard__badge { padding: 6px; }
   .admin-dashboard time { white-space: normal; }
 }
+
+.admin-dashboard__logout { display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 32px; padding: 4px; border: 0; background: transparent; color: var(--admin-navy); cursor: pointer; }
+.admin-dashboard__logout .admin-dashboard__icon { width: 20px; height: 20px; }

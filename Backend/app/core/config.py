@@ -12,6 +12,11 @@ class Settings(BaseSettings):
     DB_PASSWORD: SecretStr
     JWT_SECRET: SecretStr = Field(min_length=32)
     JWT_EXPIRE_MINUTES: int = Field(default=30, ge=1, le=1440)
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: SecretStr = SecretStr("")
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/auth/google/callback"
+    FRONTEND_URL: str = "http://localhost:5173"
+    GOOGLE_COOKIE_SECURE: bool = True
 
 @lru_cache
 def get_settings():

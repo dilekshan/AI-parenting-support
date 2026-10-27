@@ -9,6 +9,10 @@ from app.core.config import get_settings
 from app.database.connection import get_db, get_engine
 from app.routers.auth import router
 from app.routers.admin import router as admin_router
+from app.routers.google_auth import router as google_router
+from app.routers.profile_photos import router as photo_router
+from app.routers.parent_dashboard import router as parent_router
+from starlette.middleware.sessions import SessionMiddleware
 
 @asynccontextmanager
 async def lifespan(app):
@@ -17,9 +21,13 @@ async def lifespan(app):
     get_engine().dispose()
 
 app = FastAPI(title="JuvCare Authentication", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"], allow_methods=["GET", "POST"], allow_headers=["Authorization", "Content-Type"])
+app.add_middleware(SessionMiddleware, secret_key=get_settings().JWT_SECRET.get_secret_value(), session_cookie="juvcare_google_state", max_age=600, same_site="lax", https_only=get_settings().GOOGLE_COOKIE_SECURE, path="/api/auth/google")
+app.add_middleware(CORSMiddleware, allow_origins=list({"http://localhost:5173", "http://127.0.0.1:5173", get_settings().FRONTEND_URL.rstrip("/")}), allow_credentials=True, allow_methods=["GET", "POST"], allow_headers=["Authorization", "Content-Type"])
 app.include_router(router)
 app.include_router(admin_router)
+app.include_router(google_router)
+app.include_router(photo_router)
+app.include_router(parent_router)
 
 @app.exception_handler(RequestValidationError)
 async def validation_error(request, exc):

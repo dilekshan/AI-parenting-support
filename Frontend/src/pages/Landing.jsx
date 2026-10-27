@@ -131,6 +131,7 @@ export default function Landing() {
             <a href="#home" aria-current={activeSection === 'home' ? 'location' : undefined}>Home</a>
             <a href="#how-it-works" aria-current={activeSection === 'how-it-works' ? 'location' : undefined}>How It Works</a>
             <a href="#about">About JuvCare</a>
+            <a href="#footer">Footer</a>
           </nav>
           <div>
             <h2>Our Promise</h2>

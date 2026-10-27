@@ -1,6 +1,6 @@
 export function validatePersonalDetails(values) {
   const name = values.name.trim();
-  const email = values.email.trim();
+  const email = values.email.replace(/[A-Z]/g, letter => letter.toLowerCase()).trimEnd();
   const phone = values.phone.trim();
   const errors = {};
   if (!name) errors.name = 'Please enter your full name';
@@ -9,7 +9,9 @@ export function validatePersonalDetails(values) {
   const local = parts[0];
   const domain = parts[1] || '';
   const labels = domain.split('.');
-  if (email.length > 100 || parts.length !== 2 || !local || local.length > 64 ||
+  if (!/^[a-z]/.test(email)) {
+    errors.email = 'Email must start with an English letter (a-z), not a number, symbol or space';
+  } else if (email.length > 100 || parts.length !== 2 || !local || local.length > 64 ||
       !/^[A-Za-z0-9!#$%&'*+/=?^_`{|}~.-]+$/.test(local) || local.startsWith('.') || local.endsWith('.') || local.includes('..') ||
       labels.length < 2 || !labels.every(label => /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/.test(label)) || !/^[A-Za-z]{2,63}$/.test(labels.at(-1))) {
     errors.email = 'Please enter a valid email address';

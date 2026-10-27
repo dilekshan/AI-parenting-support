@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { getDashboardSummary, getRecentRegistrations } from '../../services/adminService.js';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { logout } from '../../services/authService.js';
 import logo from '../../assets/logo/985dc272-7657-42a7-aa1e-fd9ad04c085f.png';
 import wordmark from '../../assets/logo/juvcare-wordmark.png';
 import './AdminDashboard.css';
+import ProfileAvatar from '../../components/common/ProfileAvatar.jsx';
 
 function Icon({ name }) {
   const shapes = {
+    logout: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></>,
     home: <><path d="m3 10 9-7 9 7v11h-6v-7H9v7H3Z" /></>,
     people: <><circle cx="9" cy="7" r="3" /><path d="M2 21v-3a7 7 0 0 1 14 0v3M17 4a3 3 0 0 1 0 6m2 4a5 5 0 0 1 3 5v2" /></>,
     child: <><circle cx="12" cy="9" r="5" /><path d="M4 22v-2a8 8 0 0 1 16 0v2M8 5l2-3m4 3 2-3M10 10h.01M14 10h.01" /></>,
@@ -34,6 +37,11 @@ const timeFormat = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '
 const loadingState = () => ({ status: 'loading', data: null, error: null });
 
 export default function AdminDashboard({ user }) {
+  const navigate = useNavigate();
+  function handleLogout() {
+    logout();
+    navigate('/login', { replace: true });
+  }
   const [summary, setSummary] = useState(loadingState);
   const [registrations, setRegistrations] = useState(loadingState);
   useEffect(() => {
@@ -48,7 +56,7 @@ export default function AdminDashboard({ user }) {
     load(getRecentRegistrations, setRegistrations);
     return () => { active = false; };
   }, [user?.user_id]);
-  const adminName = user?.name?.trim() || 'Admin';
+  const adminName = user?.name?.trim() || ''; 
   const initials = adminName.split(/\s+/).slice(0, 2).map(part => Array.from(part)[0]).join('');
   return <div className="admin-dashboard">
     <aside className="admin-dashboard__sidebar">
@@ -60,7 +68,7 @@ export default function AdminDashboard({ user }) {
     <header className="admin-dashboard__header">
       <div className="admin-dashboard__search"><Icon name="search" /><input aria-label="Search (preview only)" placeholder="Search anything..." disabled /></div>
       <button className="admin-dashboard__notifications" type="button" disabled aria-label="Notifications (preview only)"><Icon name="bell" /><span /></button>
-      <div className="admin-dashboard__profile"><span className="admin-dashboard__avatar" aria-hidden="true">{initials}</span><span>{adminName}</span></div>
+      <div className="admin-dashboard__profile"><ProfileAvatar user={user} className="admin-dashboard__avatar">{initials}</ProfileAvatar><span title={adminName}>{adminName}</span><button type="button" className="admin-dashboard__logout" aria-label="Logout" title="Logout" onClick={handleLogout}><Icon name="logout" /></button></div>
     </header>
     <main className="admin-dashboard__main">
       <div className="admin-dashboard__intro"><div><h1>Dashboard</h1><p>Overview of JuvCare platform</p></div></div>

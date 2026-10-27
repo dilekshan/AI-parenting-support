@@ -27,7 +27,9 @@ class RegisterRequest(LoginRequest):
     def email_syntax(cls, value):
         if not isinstance(value, str):
             raise ValueError("Please enter a valid email address")
-        value = value.strip()
+        value = value.translate(str.maketrans(string.ascii_uppercase, string.ascii_lowercase)).rstrip()
+        if not re.match(r"^[a-z]", value):
+            raise ValueError("Email must start with an English letter (a-z), not a number, symbol or space")
         parts = value.split("@")
         valid = len(parts) == 2
         if valid:
@@ -85,6 +87,7 @@ class UserProfile(BaseModel):
     role: Literal["parent", "admin"]
     account_status: Literal["active"]
     created_at: datetime
+    profile_photo_url: str | None = None
 
 class RegistrationResponse(BaseModel):
     message: str

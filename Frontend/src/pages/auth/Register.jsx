@@ -31,7 +31,7 @@ export default function Register() {
   }, [step]);
   function change(event) {
     const { name, value, checked, type } = event.target;
-    setValues(previous => ({ ...previous, [name]: type === 'checkbox' ? checked : value }));
+    setValues(previous => ({ ...previous, [name]: type === 'checkbox' ? checked : name === 'email' ? value.replace(/[A-Z]/g, letter => letter.toLowerCase()) : value }));
     setErrors(previous => ({ ...previous, [name]: undefined }));
     setNotice('');
   }

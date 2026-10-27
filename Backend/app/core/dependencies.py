@@ -1,7 +1,7 @@
 import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 from app.core.security import decode_token
 from app.database.connection import get_db
 from app.models.user import User
@@ -17,7 +17,7 @@ def current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bear
         user_id = int(payload["sub"])
     except (jwt.InvalidTokenError, ValueError, TypeError, KeyError):
         raise unauthorized from None
-    user = db.get(User, user_id)
+    user = db.get(User, user_id, options=[defer(User.google_sub), defer(User.profile_photo)])
     if not user:
         raise unauthorized
     if user.account_status != "active":

@@ -143,6 +143,18 @@ class AuthTests(unittest.TestCase):
             with self.assertRaises(ValidationError):
                 RegisterRequest(**data)
 
+    def test_registration_email_first_letter_and_lowercase(self):
+        base = dict(name="Parent", password="Test-password1!")
+        for email in ["user@gmail.com", "user123@gmail.com", "abc2026@yahoo.com", "USER@GMAIL.COM", "User123@Gmail.com"]:
+            with self.subTest(email=email):
+                self.assertEqual(str(RegisterRequest(**base, email=email).email), email.lower())
+        for email in ["123user@gmail.com", "9abc@yahoo.com", "@user@gmail.com", "_user@gmail.com", "+user@gmail.com", " user@gmail.com", "\tuser@gmail.com", "\u212Auser@gmail.com", "user@", "user..abc@gmail.com"]:
+            with self.subTest(email=email):
+                with self.assertRaises(ValidationError):
+                    RegisterRequest(**base, email=email)
+        # Existing numeric-prefix login accounts are unaffected.
+        self.assertEqual(str(LoginRequest(email="123user@gmail.com", password="old").email), "123user@gmail.com")
+
 class HttpTests(unittest.TestCase):
     def test_http_workflow_with_isolated_session(self):
         from app.main import app
@@ -155,7 +167,7 @@ class HttpTests(unittest.TestCase):
             user.created_at = datetime.now()
             users[10] = user
         db.add.side_effect = add
-        db.get.side_effect = lambda model, key: users.get(key)
+        db.get.side_effect = lambda model, key, **options: users.get(key)
         app.dependency_overrides[get_db] = lambda: db
         async def request(path, data=None, token=None):
             messages = []
@@ -176,7 +188,7 @@ class HttpTests(unittest.TestCase):
                 status, _ = await request("/health")
                 self.assertEqual(status, 200)
                 payload = {"name": "Test Parent", "email": "parent@example.com", "password": "Test-password1!"}
-                for field, value in [("name", " "), ("email", "nameexample.com"), ("email", "name@"), ("email", "a..b@example.com"), ("phone", "letters"), ("phone", "07123"), ("phone", "0812345678"), ("phone", "0731234567"), ("phone", "0791234567"), ("phone", "+94731234567"), ("phone", "+94791234567"), ("phone", "94731234567"), ("phone", "94791234567")]:
+                for field, value in [("email", "123user@gmail.com"), ("email", "9abc@yahoo.com"), ("email", "@user@gmail.com"), ("email", " user@gmail.com"), ("name", " "), ("email", "nameexample.com"), ("email", "name@"), ("email", "a..b@example.com"), ("phone", "letters"), ("phone", "07123"), ("phone", "0812345678"), ("phone", "0731234567"), ("phone", "0791234567"), ("phone", "+94731234567"), ("phone", "+94791234567"), ("phone", "94731234567"), ("phone", "94791234567")]:
                     status, _ = await request("/api/auth/register", {**payload, field: value})
                     self.assertEqual(status, 422)
                 for password in ("Ab1!xyz", "abcdef1!", "ABCDEF1!", "Abcdefg!", "Abcdef12"):
