@@ -6,6 +6,7 @@ from sqlalchemy import inspect, text
 from app.database.connection import get_engine
 
 
+# Run this local setup command only when the script is called directly.
 def main():
     engine = get_engine()
     try:

@@ -9,7 +9,9 @@ from app.core.security import verify_password
 from scripts.setup_admin import insert_admin, SetupRefused, setup_admin
 
 
+# Group checks for admin setup.
 class AdminSetupTests(unittest.TestCase):
+    # Prepare isolated fixtures before each test.
     def setUp(self):
         self.engine = create_engine('sqlite://')
         metadata = MetaData()
@@ -18,10 +20,12 @@ class AdminSetupTests(unittest.TestCase):
         self.db = Session(self.engine)
         self.details = RegisterRequest(name='Test Administrator', email='admin@example.com', password='Fixture-Only1!')
 
+    # Release test sessions and remove dependency overrides after each test.
     def tearDown(self):
         self.db.close()
         self.engine.dispose()
 
+    # Check that creates one admin with existing hash function.
     def test_creates_one_admin_with_existing_hash_function(self):
         with self.db.begin():
             uid = insert_admin(self.db, self.details)
@@ -35,6 +39,7 @@ class AdminSetupTests(unittest.TestCase):
                 insert_admin(self.db, self.details)
         self.assertEqual(self.db.scalar(select(func.count()).select_from(User)), 1)
 
+    # Check that existing parent email is never promoted or modified.
     def test_existing_parent_email_is_never_promoted_or_modified(self):
         with self.db.begin():
             self.db.add(User(name='Existing Parent', email='ADMIN@example.com', password_hash='original-hash', phone='original-phone', role='parent', account_status='active'))
@@ -45,6 +50,7 @@ class AdminSetupTests(unittest.TestCase):
         self.assertEqual((user.name, user.role, user.password_hash, user.phone, user.account_status), ('Existing Parent', 'parent', 'original-hash', 'original-phone', 'active'))
         self.assertEqual(self.db.scalar(select(func.count()).select_from(User)), 1)
 
+    # Check that unrelated parent is unchanged.
     def test_unrelated_parent_is_unchanged(self):
         with self.db.begin():
             self.db.add(User(name='Parent', email='parent@example.com', password_hash='original-hash', role='parent', account_status='active'))
@@ -54,6 +60,7 @@ class AdminSetupTests(unittest.TestCase):
         self.assertEqual((parent.email, parent.password_hash), ('parent@example.com', 'original-hash'))
         self.assertEqual(self.db.scalar(select(func.count()).select_from(User)), 2)
 
+    # Check that failed lock prevents insert.
     def test_failed_lock_prevents_insert(self):
         with patch('scripts.setup_admin.get_engine') as engine, patch('scripts.setup_admin.insert_admin') as insert:
             connection = engine.return_value.connect.return_value.__enter__.return_value
@@ -63,6 +70,7 @@ class AdminSetupTests(unittest.TestCase):
             insert.assert_not_called()
             connection.rollback.assert_called()
 
+    # Check that lock held through commit and released on refusal.
     def test_lock_held_through_commit_and_released_on_refusal(self):
         with patch('scripts.setup_admin.get_engine') as engine, patch('scripts.setup_admin.Session') as session, patch('scripts.setup_admin.insert_admin', side_effect=SetupRefused('Existing admin')):
             connection = engine.return_value.connect.return_value.__enter__.return_value

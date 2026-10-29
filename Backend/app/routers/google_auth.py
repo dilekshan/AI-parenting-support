@@ -22,6 +22,7 @@ COOKIE = "juvcare_google_handoff"
 COOKIE_PATH = "/api/auth/google/exchange"
 
 
+# Build the Google client from server-side configuration.
 @lru_cache
 def google_client():
     settings = get_settings()
@@ -36,6 +37,7 @@ def google_client():
     )
 
 
+# Return to a fixed frontend page without exposing provider details.
 def frontend_redirect(error=None):
     # Fixed destination; never accept a redirect URL supplied by the browser.
     target = get_settings().FRONTEND_URL.rstrip("/") + "/auth/google/callback"
@@ -46,6 +48,7 @@ def frontend_redirect(error=None):
     return response
 
 
+# Begin Google sign-in with checks that bind the callback to this browser.
 @router.get("/start")
 async def start(request: Request):
     try:
@@ -60,6 +63,7 @@ async def start(request: Request):
     )
 
 
+# Verify Google identity and create only a new parent account when allowed.
 @router.get("/callback")
 async def callback(request: Request, db: Session = Depends(get_db)):
     try:
@@ -80,6 +84,7 @@ async def callback(request: Request, db: Session = Depends(get_db)):
 
     user = db.scalar(select(User).where(User.google_sub == subject))
     is_new = user is None
+    # Do not link a password account just because its email matches Google.
     if is_new:
         email = identity.get("email", "").strip().lower()
         if not email or len(email) > 100:
@@ -97,6 +102,7 @@ async def callback(request: Request, db: Session = Depends(get_db)):
         except IntegrityError:
             db.rollback()
             return frontend_redirect("account_conflict")
+    # Google sign-in must never grant admin access.
     if user.role != "parent" or user.account_status != "active":
         return frontend_redirect("permission")
 
@@ -112,10 +118,12 @@ async def callback(request: Request, db: Session = Depends(get_db)):
     return response
 
 
+# Tell the frontend whether this Google user needs the optional profile step.
 class GoogleLoginResponse(LoginResponse):
     new_user: bool
 
 
+# Trade the short-lived browser handoff for the normal application session.
 @router.post("/exchange", response_model=GoogleLoginResponse)
 def exchange(request: Request, response: Response, db: Session = Depends(get_db)):
     settings = get_settings()
@@ -136,16 +144,19 @@ def exchange(request: Request, response: Response, db: Session = Depends(get_db)
             "user": user, "new_user": payload["new_user"]}
 
 
+# Accept only the optional phone field for Google profile completion.
 class GoogleProfileRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     phone: str | None = Field(default=None, max_length=20)
 
+    # Reuse registration phone rules instead of maintaining a second validator.
     @field_validator("phone", mode="before")
     @classmethod
     def validate_phone(cls, value):
         return RegisterRequest.sri_lankan_mobile(value)
 
 
+# Update the optional phone number only for the signed-in Google parent.
 @router.post("/profile", response_model=UserProfile)
 def complete_profile(body: GoogleProfileRequest, user: User = Depends(current_user), db: Session = Depends(get_db)):
     if user.role != "parent" or not user.google_sub:

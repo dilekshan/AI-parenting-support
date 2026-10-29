@@ -10,6 +10,7 @@ from app.schemas.admin import DashboardSummary, RecentRegistration
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 
+# Count existing database records and mark unsupported statistics unavailable.
 @router.get("/dashboard/summary", response_model=DashboardSummary)
 def dashboard_summary(admin: User = Depends(current_admin), db: Session = Depends(get_db)):
     # Inspect through this request's connection; do not create tables or cache
@@ -49,6 +50,7 @@ def dashboard_summary(admin: User = Depends(current_admin), db: Session = Depend
     )
 
 
+# Return only safe fields from the newest registered accounts.
 @router.get("/dashboard/recent-registrations", response_model=list[RecentRegistration])
 def recent_registrations(admin: User = Depends(current_admin), db: Session = Depends(get_db)):
     return db.execute(

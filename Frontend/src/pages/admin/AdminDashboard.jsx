@@ -7,6 +7,7 @@ import wordmark from '../../assets/logo/juvcare-wordmark.png';
 import './AdminDashboard.css';
 import ProfileAvatar from '../../components/common/ProfileAvatar.jsx';
 
+// Reuse the same SVG style for the icons on this dashboard.
 function Icon({ name }) {
   const shapes = {
     logout: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></>,
@@ -36,18 +37,23 @@ const dateFormat = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'sh
 const timeFormat = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 const loadingState = () => ({ status: 'loading', data: null, error: null });
 
+// Load the admin totals and registrations independently.
 export default function AdminDashboard({ user }) {
   const navigate = useNavigate();
+  // Clear the local session before returning to the login page.
   function handleLogout() {
     logout();
     navigate('/login', { replace: true });
   }
+  // Track summary and registration results separately so one failure does not hide the other.
   const [summary, setSummary] = useState(loadingState);
   const [registrations, setRegistrations] = useState(loadingState);
+  // Load both sections for the current account and ignore stale responses.
   useEffect(() => {
     let active = true;
     setSummary(loadingState());
     setRegistrations(loadingState());
+    // Record success or failure separately for each dashboard request.
     const load = (request, setState) => request().then(
       data => { if (active) setState({ status: 'success', data, error: null }); },
       error => { if (active) setState({ status: 'error', data: null, error: error.message }); },

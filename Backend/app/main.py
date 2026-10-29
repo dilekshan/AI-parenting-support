@@ -12,8 +12,10 @@ from app.routers.admin import router as admin_router
 from app.routers.google_auth import router as google_router
 from app.routers.profile_photos import router as photo_router
 from app.routers.parent_dashboard import router as parent_router
+from app.routers.password_recovery import router as password_recovery_router
 from starlette.middleware.sessions import SessionMiddleware
 
+# Check startup configuration and release database connections on shutdown.
 @asynccontextmanager
 async def lifespan(app):
     get_settings()
@@ -28,12 +30,15 @@ app.include_router(admin_router)
 app.include_router(google_router)
 app.include_router(photo_router)
 app.include_router(parent_router)
+app.include_router(password_recovery_router)
 
+# Return validation details without echoing sensitive submitted values.
 @app.exception_handler(RequestValidationError)
 async def validation_error(request, exc):
     # Never echo rejected input (especially passwords) in validation responses.
     return JSONResponse(status_code=422, content={"detail": [{"loc": list(e["loc"]), "msg": e["msg"], "type": e["type"]} for e in exc.errors()]})
 
+# Confirm that the application can reach its database.
 @app.get("/health")
 def health(db: Session = Depends(get_db)):
     db.execute(text("SELECT 1"))

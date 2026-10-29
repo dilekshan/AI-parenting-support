@@ -43,6 +43,7 @@ def insert_admin(db: Session, details: RegisterRequest):
     return user.user_id
 
 
+# Hold a database lock so concurrent setup attempts cannot create duplicate admins.
 def setup_admin(details: RegisterRequest):
     engine = get_engine()
     try:
@@ -71,6 +72,7 @@ def setup_admin(details: RegisterRequest):
         engine.dispose()
 
 
+# Run this local setup command only when the script is called directly.
 def main():
     if not sys.stdin.isatty():
         print("Run this script interactively in your local terminal; redirected input is not accepted.")

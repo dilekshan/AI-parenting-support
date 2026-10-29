@@ -17,3 +17,24 @@
 .profile-photo-actions button:disabled { opacity: .6; cursor: wait; }
 .profile-photo-dialog :focus-visible { outline: 3px solid #edaa36; outline-offset: 3px; }
 .profile-photo-dialog .profile-photo-error { color: #a13728; }
+/* Parent-only editor keeps the measured chooser dimensions and original shell. */
+.profile-editor-dialog { padding: 16px; display: grid; grid-template-rows: 28px minmax(0, 1fr); grid-auto-rows: auto; gap: 6px; overflow: hidden; }
+.profile-editor-dialog h2 { margin: 0; padding-right: 100px; white-space: nowrap; }
+.profile-editor-toolbar { position: absolute; top: 16px; right: 16px; display: flex; align-items: center; gap: 6px; }
+.profile-editor-dialog button { font: inherit; font-size: 12px; cursor: pointer; }
+.profile-editor-toolbar button, .profile-editor-name-form button { padding: 4px 10px; border: 1px solid #12634e; border-radius: 7px; background: #12634e; color: #fff; }
+.profile-editor-toolbar .profile-editor-close { padding: 0 5px; border: 0; background: transparent; color: #12634e; font-size: 22px; }
+.profile-editor-cards { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; min-height: 0; }
+.profile-editor-cards button { min-width: 0; min-height: 0; padding: 4px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 2px solid #e3dfdb; border-radius: 10px; background: #fffcf8; color: #092854; overflow: hidden; }
+.profile-editor-cards button[aria-pressed=true] { border-color: #12634e; }
+.profile-editor-cards img, .profile-editor-initial { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; object-fit: cover; }
+.profile-editor-initial { display: grid; place-items: center; background: #e3dfdb; color: #12634e; }
+.profile-editor-name { max-width: 100%; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; font-weight: 600; }
+.profile-editor-name-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; min-height: 0; }
+.profile-editor-name-label { font-size: 12px; }
+.profile-editor-name-form input { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #e3dfdb; border-radius: 7px; background: #fffcf8; color: #092854; font: inherit; font-size: 13px; padding: 4px 8px; }
+.profile-editor-name-form > div { display: flex; justify-content: flex-end; gap: 6px; }
+.profile-editor-name-form button:first-child { background: transparent; color: #12634e; }
+.profile-editor-dialog p { margin: 0; font-size: 11px; line-height: 1.2; max-height: 26px; overflow-y: auto; }
+.profile-editor-dialog button:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 360px) { .profile-editor-dialog h2 { font-size: 20px; } .profile-editor-cards { gap: 6px; } }

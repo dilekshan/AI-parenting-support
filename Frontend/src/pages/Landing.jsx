@@ -8,6 +8,7 @@ import wordmark from '../assets/logo/juvcare-wordmark.png';
 import originalLogo from '../assets/logo/985dc272-7657-42a7-aa1e-fd9ad04c085f.png';
 import './Landing.css';
 
+// Draw the matching benefit icon without loading another image.
 function FeatureIcon({ type }) {
   const paths = {
     family: <><circle cx="12" cy="7" r="4" /><path d="M6 21v-3a6 6 0 0 1 12 0v3ZM5 5a3.5 3.5 0 0 0 0 7M19 5a3.5 3.5 0 0 1 0 7M5 14a5 5 0 0 0-4 5v1h3M19 14a5 5 0 0 1 4 5v1h-3" /></>,
@@ -25,12 +26,16 @@ const features = [
   ['heart', 'A Happier', 'Tomorrow'],
 ];
 
+// Show the public landing page and track the visible section.
 export default function Landing() {
+  // Remember the visible section so its navigation link can be highlighted.
   const [activeSection, setActiveSection] = useState('home');
+  // Watch scrolling and window size changes, then remove listeners on unmount.
   useEffect(() => {
     const sections = ['home', 'how-it-works', 'about'].map(id => document.getElementById(id));
     const footer = document.getElementById('footer');
     let frame = 0;
+    // Find which section has reached the fixed navigation bar.
     const update = () => {
       frame = 0;
       const headerHeight = document.querySelector('.juv-landing__header').getBoundingClientRect().height;
@@ -52,6 +57,7 @@ export default function Landing() {
       if (reachedFooter || reachedShortFooter) current = 'footer';
       setActiveSection(current);
     };
+    // Combine frequent scroll events into one update per animation frame.
     const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
     update();
     window.addEventListener('scroll', schedule, { passive: true });

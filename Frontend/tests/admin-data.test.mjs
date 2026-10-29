@@ -1,4 +1,5 @@
-﻿import { test } from 'node:test';
+﻿// Exercise this feature with controlled fixtures and assertions.
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import React from 'react';
@@ -18,6 +19,7 @@ const createComponent = new Function('React', 'Link', 'logo', 'wordmark', 'useSt
 const totals = { total_children: null, total_parents: 7, active_users: 9, subscription_users: null };
 const rows = [{ user_id: 11, name: 'Database User', role: 'parent', created_at: '2026-10-20T12:34:00' }];
 
+// Provide lightweight state adapters for testing the component output.
 function mount() {
   let index = 0, mounted = false;
   const states = [];
@@ -29,6 +31,7 @@ function mount() {
   return () => { index = 0; return renderToStaticMarkup(component({ user: { user_id: 1, name: 'Owner' } })); };
 }
 
+// Replace network responses so dashboard states can be tested without live accounts.
 async function mockSession(t, summary = totals, registrations = rows, failSummary = false, failRegistrations = false) {
   const requests = [];
   const originalFetch = globalThis.fetch;

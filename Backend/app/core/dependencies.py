@@ -8,6 +8,7 @@ from app.models.user import User
 
 bearer = HTTPBearer(auto_error=False)
 
+# Verify the signed session and load its active account from the database.
 def current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bearer), db: Session = Depends(get_db)):
     unauthorized = HTTPException(401, "Invalid or expired access token", headers={"WWW-Authenticate": "Bearer"})
     if credentials is None:
@@ -25,6 +26,7 @@ def current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bear
     return user
 
 
+# Require an admin role from the database, not from browser input.
 def current_admin(user: User = Depends(current_user)):
     if user.role != "admin":
         raise HTTPException(403, "Admin permission required")

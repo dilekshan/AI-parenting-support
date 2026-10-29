@@ -10,16 +10,19 @@ from app.models.user import User
 router = APIRouter(prefix='/api/parent', tags=['Parent dashboard'])
 
 
+# Keep this read-only dashboard limited to parent accounts.
 def parent_user(user: User = Depends(current_user)):
     if user.role != 'parent':
         raise HTTPException(403, 'Parent permission required')
     return user
 
 
+# Read the first available field from the inspected database row.
 def value(row, *names):
     return next((row[name] for name in names if name in row and row[name] is not None), None)
 
 
+# Calculate full years from a valid birth date.
 def age(dob):
     if isinstance(dob, datetime):
         dob = dob.date()
@@ -29,6 +32,7 @@ def age(dob):
     return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
 
 
+# Follow verified ownership links before returning parent-specific records.
 @router.get('/dashboard')
 def dashboard(user: User = Depends(parent_user), db: Session = Depends(get_db)):
     connection = db.connection()
@@ -42,6 +46,7 @@ def dashboard(user: User = Depends(parent_user), db: Session = Depends(get_db)):
     chain = None
     previous = None
     owner_filter = None
+    # Walk the ownership chain and stop trusting any section with missing relationships.
     for key, label in [('children', 'Child'), ('issues', 'ParentingIssue'), ('guidance', 'AIGuidance'), ('plans', 'ParentingPlan'), ('activities', 'DailyActivity')]:
         name = names.get(label.casefold())
         if name is None:
@@ -52,6 +57,7 @@ def dashboard(user: User = Depends(parent_user), db: Session = Depends(get_db)):
         table = Table(name, metadata, autoload_with=connection)
         parent_table = names.get('user') if key == 'children' else previous.name if previous is not None else None
         links = [fk for fk in inspector.get_foreign_keys(name) if (fk.get('referred_table') or '').casefold() == (parent_table or '').casefold() and len(fk.get('constrained_columns', [])) == 1 and len(fk.get('referred_columns', [])) == 1]
+        # Refuse ambiguous or missing ownership links instead of guessing access.
         if len(links) != 1 or (key == 'children' and links[0]['referred_columns'] != ['user_id']):
             unavailable[key] = f'{label} ownership relationship is not available.'
             rows[key] = None
@@ -73,6 +79,7 @@ def dashboard(user: User = Depends(parent_user), db: Session = Depends(get_db)):
     plans = None if rows['plans'] is None else [dict(plan_id=r.get(primary_keys.get('plans')), start_date=value(r, 'start_date'), end_date=value(r, 'end_date')) for r in rows['plans']]
     activities = None if rows['activities'] is None else [dict(plan_id=r.get(link_keys.get('activities')), title=value(r, 'title', 'activity_title', 'activity_name'), description=value(r, 'description', 'activity_description'), date=value(r, 'activity_date', 'scheduled_date', 'date'), duration=value(r, 'duration_minutes', 'duration'), status=value(r, 'status', 'completion_status'), category=value(r, 'category'), time=value(r, 'time_of_day')) for r in rows['activities']]
     progress = None
+    # Count this week only when activity dates and statuses can be verified.
     if activities is not None:
         start = date.today() - timedelta(days=date.today().weekday())
         week = []

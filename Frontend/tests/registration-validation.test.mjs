@@ -1,3 +1,4 @@
+// Exercise this feature with controlled fixtures and assertions.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {validatePersonalDetails as validate, validateAccountSecurity} from '../src/services/registrationValidation.js';

@@ -12,12 +12,15 @@ const messages = {
   authentication: 'Google sign-in was cancelled or could not be verified. Please try again.',
 };
 
+// Finish Google sign-in and offer new users an optional phone step.
 export default function GoogleCallback() {
   const navigate = useNavigate();
+  // Track the optional phone step and its saving or error state.
   const [ready, setReady] = useState(false);
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  // Handle provider errors or finish verification before navigating to the dashboard.
   useEffect(() => {
     let active = true;
     const providerError = new URLSearchParams(window.location.search).get('error');
@@ -33,6 +36,7 @@ export default function GoogleCallback() {
     return () => { active = false; };
   }, [navigate]);
 
+  // Save the selected information and keep errors available for retry.
   async function save(event) {
     event.preventDefault();
     if (saving) return;

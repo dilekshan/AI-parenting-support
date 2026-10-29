@@ -4,15 +4,18 @@ from datetime import datetime
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr, field_validator
 
+# Validate the fields accepted by password sign-in.
 class LoginRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     email: EmailStr = Field(max_length=100)
     password: SecretStr = Field(min_length=1, max_length=1024)
 
+# Add registration-only validation to the shared account inputs.
 class RegisterRequest(LoginRequest):
     name: str = Field(min_length=1, max_length=100)
     phone: str | None = Field(default=None, max_length=20)
 
+    # Remove surrounding spaces and reject an empty name.
     @field_validator("name", mode="before")
     @classmethod
     def name_required(cls, value):
@@ -22,6 +25,7 @@ class RegisterRequest(LoginRequest):
                 raise ValueError("Please enter your full name")
         return value
 
+    # Normalize English letters and enforce the registration email rules.
     @field_validator("email", mode="before")
     @classmethod
     def email_syntax(cls, value):
@@ -45,6 +49,7 @@ class RegisterRequest(LoginRequest):
             raise ValueError("Please enter a valid email address")
         return value
 
+    # Validate supported mobile numbers and store a consistent country-code format.
     @field_validator("phone", mode="before")
     @classmethod
     def sri_lankan_mobile(cls, value):
@@ -59,6 +64,7 @@ class RegisterRequest(LoginRequest):
             raise ValueError("Please enter a valid Sri Lankan mobile number.")
         return "+94" + value[1:] if value.startswith("0") else value if value.startswith("+") else "+" + value
 
+    # Report each missing password requirement without echoing the password.
     @field_validator("password")
     @classmethod
     def strong_password(cls, value):
@@ -78,6 +84,7 @@ class RegisterRequest(LoginRequest):
             raise ValueError("Password must contain " + ", ".join(missing) + ".")
         return value
 
+# Define the safe account fields returned to the frontend.
 class UserProfile(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     user_id: int
@@ -89,12 +96,24 @@ class UserProfile(BaseModel):
     created_at: datetime
     profile_photo_url: str | None = None
 
+# Return the created account without exposing its password hash.
 class RegistrationResponse(BaseModel):
     message: str
     user: UserProfile
 
+# Describe the signed session and the safe user profile returned after login.
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
     user: UserProfile
+
+
+class ProfileNameUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(min_length=1, max_length=100)
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def validate_name(cls, value):
+        return RegisterRequest.name_required(value)

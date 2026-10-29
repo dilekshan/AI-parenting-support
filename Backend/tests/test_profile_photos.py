@@ -19,7 +19,9 @@ from app.core.security import create_token
 from app.routers.profile_photos import MAX_BYTES
 
 
+# Group checks for photo.
 class PhotoTests(unittest.TestCase):
+    # Prepare isolated fixtures before each test.
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -36,6 +38,7 @@ class PhotoTests(unittest.TestCase):
         self.addCleanup(self.client.close)
         self.headers = {'Authorization': 'Bearer ' + create_token(8), 'Content-Type': 'application/octet-stream'}
 
+    # Check that formats roles and serving.
     def test_formats_roles_and_serving(self):
         for role in ('parent', 'admin'):
             self.user.role = role
@@ -53,6 +56,7 @@ class PhotoTests(unittest.TestCase):
                 self.assertEqual(self.client.get('/api/auth/me', headers=self.headers).json()['profile_photo_url'], url)
                 self.assertEqual(self.user.user_id, 8)
 
+    # Check that rejections.
     def test_rejections(self):
         self.assertEqual(self.client.post('/api/auth/me/profile-photo', content=b'x').status_code, 401)
         for content, code in [(b'<svg>not a raster</svg>', 422), (b'', 422), (b'x' * (MAX_BYTES+1), 413), (b'GIF89a', 422)]:
@@ -63,6 +67,7 @@ class PhotoTests(unittest.TestCase):
         self.assertEqual(list(self.path.iterdir()), [])
         self.assertEqual(self.client.get('/api/profile-photos/not-a-safe-name.webp').status_code, 404)
 
+    # Check that failed commit removes new file.
     def test_failed_commit_removes_new_file(self):
         from sqlalchemy.exc import SQLAlchemyError
         self.db.commit.side_effect = SQLAlchemyError()
@@ -72,6 +77,7 @@ class PhotoTests(unittest.TestCase):
         self.assertEqual(result.status_code, 503)
         self.assertEqual(list(self.path.iterdir()), [])
 
+    # Check that persists only jwt owner across sessions.
     def test_persists_only_jwt_owner_across_sessions(self):
         from sqlalchemy import create_engine, text
         from sqlalchemy.orm import Session
@@ -81,6 +87,7 @@ class PhotoTests(unittest.TestCase):
             connection.execute(text('CREATE TABLE User (user_id INTEGER PRIMARY KEY, name TEXT, email TEXT, password_hash TEXT, google_sub TEXT, profile_photo TEXT, phone TEXT, role TEXT, account_status TEXT, created_at DATETIME)'))
             for user_id in (8, 9):
                 connection.execute(text("INSERT INTO User (user_id, name, email, role, account_status, created_at) VALUES (:id, 'Fixture', 'fixture@example.com', 'parent', 'active', CURRENT_TIMESTAMP)"), {'id': user_id})
+        # Use a temporary test database instead of the application database.
         def isolated_db():
             with Session(engine) as db:
                 yield db

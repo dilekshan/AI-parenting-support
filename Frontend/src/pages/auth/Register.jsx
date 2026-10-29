@@ -15,9 +15,11 @@ const placeholders = {
 };
 
 const titles = ['Personal Details', 'Account Security', 'Review & Create Account'];
+// Keep form values while the user moves through registration steps.
 export default function Register() {
   const navigate = useNavigate();
   const submitting = useRef(false);
+  // Keep the current step, entered values and field errors between renders.
   const [step, setStep] = useState(0);
   const [values, setValues] = useState({ name: '', email: '', phone: '', password: '', confirm: '', terms: false });
   const [errors, setErrors] = useState({});
@@ -25,10 +27,12 @@ export default function Register() {
   const [notice, setNotice] = useState('');
   const heading = useRef(null);
   const firstRender = useRef(true);
+  // Move keyboard focus to the heading when the registration step changes.
   useEffect(() => {
     if (firstRender.current) { firstRender.current = false; return; }
     heading.current?.focus({ preventScroll: true });
   }, [step]);
+  // Update the selected input and clear feedback that is no longer current.
   function change(event) {
     const { name, value, checked, type } = event.target;
     setValues(previous => ({ ...previous, [name]: type === 'checkbox' ? checked : name === 'email' ? value.replace(/[A-Z]/g, letter => letter.toLowerCase()) : value }));
@@ -37,22 +41,26 @@ export default function Register() {
   }
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(false);
+  // Validate the current step before advancing or creating an account.
   async function submit(event) {
     event.preventDefault();
     if (submitting.current || loading || created) return;
     const nextErrors = {};
     const personal = validatePersonalDetails(values);
+    // Validate personal details again during the final review.
     if (step === 0 || step === 2) Object.assign(nextErrors, personal.errors);
     if (step === 1 || step === 2) {
       Object.assign(nextErrors, validateAccountSecurity(values));
       if (!values.terms) nextErrors.terms = 'Accept the Terms and Privacy Policy to continue.';
     }
     setErrors(nextErrors);
+    // Keep the user on the relevant step and focus the first invalid field.
     if (Object.keys(nextErrors).length) {
       if (step === 2) setStep(Object.keys(personal.errors).length ? 0 : 1);
       event.currentTarget.elements.namedItem(Object.keys(nextErrors)[0])?.focus();
       return;
     }
+    // Advance locally until the final step is ready for the API.
     if (step < 2) {
       if (step === 0) setValues(previous => ({ ...previous, name: personal.normalized.name, email: personal.normalized.email }));
       setStep(step + 1);
@@ -75,6 +83,7 @@ export default function Register() {
     }
   }
   function field(name, label, type = 'text', required = true, autoComplete) {
+    // Reuse one field renderer to keep labels, visibility controls and errors consistent.
     return <div className="juv-register__field" key={name}>
       <label htmlFor={`register-${name}`}>{label}{!required && <span> (optional)</span>}</label>
       {name === 'password' || name === 'confirm' ? <div className="juv-register__password">

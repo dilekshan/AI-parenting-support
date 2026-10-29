@@ -7,6 +7,7 @@ import wordmark from '../../assets/logo/juvcare-wordmark.png';
 import './Home.css';
 import ProfileAvatar from '../../components/common/ProfileAvatar.jsx';
 
+// Reuse the same SVG style for the icons on this dashboard.
 function Icon({ name, className = '' }) {
   const shapes = {
     home: <><path d="m3 10 9-7 9 7v11h-6v-7H9v7H3Z" /></>,
@@ -29,17 +30,24 @@ function Icon({ name, className = '' }) {
   return <svg className={`parent-home__icon ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{shapes[name]}</svg>;
 }
 
+// Keep unfinished actions visible without allowing clicks.
 function PreviewButton({ children, className = '', ...props }) {
   return <button type="button" disabled className={className} {...props}>{children}</button>;
 }
+// Reserve image space without showing an invented user photo.
 function Placeholder({ className = '', label }) {
   return <div className={`parent-home__placeholder ${className}`} role="img" aria-label={label} />;
 }
 
-export default function Home({ user }) {
+// Show this parent's dashboard while keeping account actions together.
+export default function Home({ user: authenticatedUser }) {
+  const [profileUpdate, setProfileUpdate] = useState(null);
+  const user = profileUpdate?.user_id === authenticatedUser?.user_id ? { ...authenticatedUser, ...profileUpdate } : authenticatedUser;
   const navigate = useNavigate();
+  // Keep dashboard data and loading failures separate from the account profile.
   const [dashboard, setDashboard] = useState(null);
   const [error, setError] = useState('');
+  // Reload for the authenticated parent and ignore results after leaving the page.
   useEffect(() => {
     let active = true;
     setDashboard(null); setError('');
@@ -49,6 +57,7 @@ export default function Home({ user }) {
   const loading = !dashboard && !error;
   const message = (section, empty) => loading ? 'Loading...' : error ? `Unavailable: ${error}` : dashboard?.unavailable?.[section] ? `${empty} ${dashboard.unavailable[section]}` : empty;
   const progress = dashboard?.progress;
+  // Choose the latest available plan without inserting sample records.
   const plans = [...(dashboard?.plans || [])].sort((a, b) => String(b.start_date || '').localeCompare(String(a.start_date || '')));
   const plan = plans[0];
   const planActivities = (dashboard?.activities || []).filter(item => plan && item.plan_id === plan.plan_id);
@@ -56,10 +65,12 @@ export default function Home({ user }) {
   const activity = planActivities.find(item => String(item.date || '').slice(0, 10) === today) || [...planActivities].sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')))[0];
   const guidance = [...(dashboard?.guidance || [])].sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))[0];
   const formatDate = value => value ? new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '?';
+  // Build the calendar from the saved plan start date; missing dates stay blank.
   const days = Array.from({ length: 7 }, (_, index) => {
     if (!plan?.start_date) return null;
     const day = new Date(plan.start_date); day.setDate(day.getDate() + index); return day;
   });
+  // Clear the local session before returning to the login page.
   function handleLogout() {
     logout();
     navigate('/login', { replace: true });
@@ -75,7 +86,7 @@ export default function Home({ user }) {
       </nav>
       <div className="parent-home__search"><Icon name="search" /><input aria-label="Search (preview only)" placeholder="Search guidance, activities, stories..." disabled /></div>
       <PreviewButton className="parent-home__notification" aria-label="Notifications (preview only)"><Icon name="bell" /><span aria-label="Notification count unavailable">?</span></PreviewButton>
-      <div className="parent-home__profile"><ProfileAvatar user={user} className="parent-home__placeholder" /><span title={parentName}>{user?.name?.trim()}</span></div>
+      <div className="parent-home__profile"><ProfileAvatar user={user} editProfile onProfileUpdated={setProfileUpdate} className="parent-home__placeholder" /><span title={parentName}>{user?.name?.trim()}</span></div>
       <button type="button" className="parent-home__logout" aria-label="Logout" title="Logout" onClick={handleLogout}><Icon name="logout" /></button>
     </header>
     <aside className="parent-home__welcome">

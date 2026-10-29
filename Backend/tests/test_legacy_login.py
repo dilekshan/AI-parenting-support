@@ -11,7 +11,9 @@ from app.routers.auth import login
 from app.schemas.auth import LoginRequest, LoginResponse, UserProfile
 
 
+# Group checks for legacy login.
 class LegacyLoginTests(unittest.TestCase):
+    # Check that login and me without google column.
     def test_login_and_me_without_google_column(self):
         engine = create_engine('sqlite:///:memory:')
         with engine.begin() as connection:

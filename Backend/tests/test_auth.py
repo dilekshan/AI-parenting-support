@@ -22,13 +22,17 @@ from app.models.user import User
 from app.routers.auth import register, login
 from app.schemas.auth import RegisterRequest, LoginRequest, RegistrationResponse, LoginResponse
 
+# Group checks for auth.
 class AuthTests(unittest.TestCase):
+    # Prepare isolated fixtures before each test.
     def setUp(self):
         self.db = MagicMock()
         self.user = User(user_id=1, name="Test Parent", email="parent@example.com", phone=None, password_hash=hash_password("Test-password1!"), role="parent", account_status="active", created_at=datetime.now())
 
+    # Check that registration hash and safe response.
     def test_registration_hash_and_safe_response(self):
         self.db.scalar.return_value = None
+        # Fill generated fields in the mocked record for response validation.
         def refresh(user):
             user.user_id = 1
             user.created_at = datetime.now()
@@ -42,6 +46,7 @@ class AuthTests(unittest.TestCase):
         self.db.commit.assert_called_once()
         self.assertNotIn("password", RegistrationResponse.model_validate(result).model_dump_json())
 
+    # Check that duplicate.
     def test_duplicate(self):
         self.db.scalar.return_value = self.user
         with self.assertRaises(HTTPException) as error:
@@ -49,6 +54,7 @@ class AuthTests(unittest.TestCase):
         self.assertEqual(error.exception.status_code, 409)
         self.db.add.assert_not_called()
 
+    # Check that login and me.
     def test_login_and_me(self):
         self.db.scalar.return_value = self.user
         result = login(LoginRequest(email="parent@example.com", password="Test-password1!"), self.db)
@@ -57,21 +63,25 @@ class AuthTests(unittest.TestCase):
         self.db.get.return_value = self.user
         self.assertEqual(current_user(HTTPAuthorizationCredentials(scheme="Bearer", credentials=result["access_token"]), self.db).user_id, 1)
 
+    # Check that wrong password.
     def test_wrong_password(self):
         self.db.scalar.return_value = self.user
         with self.assertRaises(HTTPException) as error:
             login(LoginRequest(email="parent@example.com", password="wrong"), self.db)
         self.assertEqual(error.exception.status_code, 401)
 
+    # Check that unknown email.
     def test_unknown_email(self):
         self.db.scalar.return_value = None
         with self.assertRaises(HTTPException) as error:
             login(LoginRequest(email="unknown@example.com", password="wrong"), self.db)
         self.assertEqual(error.exception.status_code, 401)
 
+    # Check that malformed hash.
     def test_malformed_hash(self):
         self.assertFalse(verify_password("test", "$argon2id$broken"))
 
+    # Check that mobile prefixes and lengths.
     def test_mobile_prefixes_and_lengths(self):
         base = dict(name="Parent", email="parent@example.com", password="Test-password1!")
         for prefix in ("070", "071", "072", "074", "075", "076", "077", "078", "073", "079"):
@@ -90,6 +100,7 @@ class AuthTests(unittest.TestCase):
         for phone in (None, "", "  "):
             self.assertIsNone(RegisterRequest(**base, phone=phone).phone)
 
+    # Check that registration password strength.
     def test_registration_password_strength(self):
         base = dict(name="Parent", email="parent@example.com")
         for password in ("", "Ab1!xyz", "abcdef1!", "ABCDEF1!", "Abcdefg!", "Abcdef12", "Abcdef1 "):
@@ -101,11 +112,13 @@ class AuthTests(unittest.TestCase):
         # Existing accounts are still allowed to log in with older passwords.
         self.assertEqual(LoginRequest(email="parent@example.com", password="old").password.get_secret_value(), "old")
 
+    # Check that missing fields.
     def test_missing_fields(self):
         for data in ({}, {"email": "parent@example.com"}, {"email": "parent@example.com", "password": ""}):
             with self.assertRaises(ValidationError):
                 LoginRequest(**data)
 
+    # Check that duplicate race rolls back.
     def test_duplicate_race_rolls_back(self):
         from sqlalchemy.exc import IntegrityError
         self.db.scalar.return_value = None
@@ -115,6 +128,7 @@ class AuthTests(unittest.TestCase):
         self.assertEqual(error.exception.status_code, 409)
         self.db.rollback.assert_called_once()
 
+    # Check that database failure rolls back and closes.
     def test_database_failure_rolls_back_and_closes(self):
         from sqlalchemy.exc import OperationalError
         from app.database.connection import get_db
@@ -128,6 +142,7 @@ class AuthTests(unittest.TestCase):
             self.db.rollback.assert_called_once()
             self.db.close.assert_called_once()
 
+    # Check that invalid and expired tokens.
     def test_invalid_and_expired_tokens(self):
         now = datetime.now(timezone.utc)
         expired = jwt.encode({"sub": "1", "iat": now - timedelta(minutes=2), "exp": now - timedelta(minutes=1), "iss": "juvcare", "aud": "juvcare-web"}, get_settings().JWT_SECRET.get_secret_value(), algorithm="HS256")
@@ -136,6 +151,7 @@ class AuthTests(unittest.TestCase):
                 current_user(HTTPAuthorizationCredentials(scheme="Bearer", credentials=token), self.db)
             self.assertEqual(error.exception.status_code, 401)
 
+    # Check that validation and role injection.
     def test_validation_and_role_injection(self):
         for changes in ({"name": " "}, {"email": "invalid"}, {"role": "admin"}, {"password": " "}, {"phone": "1" * 21}):
             data = dict(name="Parent", email="parent@example.com", password="Test-password1!")
@@ -143,6 +159,7 @@ class AuthTests(unittest.TestCase):
             with self.assertRaises(ValidationError):
                 RegisterRequest(**data)
 
+    # Check that registration email first letter and lowercase.
     def test_registration_email_first_letter_and_lowercase(self):
         base = dict(name="Parent", password="Test-password1!")
         for email in ["user@gmail.com", "user123@gmail.com", "abc2026@yahoo.com", "USER@GMAIL.COM", "User123@Gmail.com"]:
@@ -155,7 +172,9 @@ class AuthTests(unittest.TestCase):
         # Existing numeric-prefix login accounts are unaffected.
         self.assertEqual(str(LoginRequest(email="123user@gmail.com", password="old").email), "123user@gmail.com")
 
+# Group checks for http.
 class HttpTests(unittest.TestCase):
+    # Check that http workflow with isolated session.
     def test_http_workflow_with_isolated_session(self):
         from app.main import app
         from app.database.connection import get_db
@@ -169,11 +188,14 @@ class HttpTests(unittest.TestCase):
         db.add.side_effect = add
         db.get.side_effect = lambda model, key, **options: users.get(key)
         app.dependency_overrides[get_db] = lambda: db
+        # Send a request and turn network or response failures into readable errors.
         async def request(path, data=None, token=None):
             messages = []
             body = json.dumps(data).encode() if data is not None else b""
+            # Supply a request message to the in-process HTTP test.
             async def receive():
                 return {"type": "http.request", "body": body, "more_body": False}
+            # Collect response messages so the test can inspect status and content.
             async def send(message):
                 messages.append(message)
             headers = [(b"content-type", b"application/json")]
@@ -183,6 +205,7 @@ class HttpTests(unittest.TestCase):
             status = next(m["status"] for m in messages if m["type"] == "http.response.start")
             output = json.loads(b"".join(m.get("body", b"") for m in messages if m["type"] == "http.response.body"))
             return status, output
+        # Exercise the request sequence against an isolated test session.
         async def workflow():
             async with app.router.lifespan_context(app):
                 status, _ = await request("/health")

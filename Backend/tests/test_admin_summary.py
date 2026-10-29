@@ -20,17 +20,22 @@ from app.core.security import create_token
 from app.database.connection import get_db
 from app.main import app
 
+# Send a request and turn network or response failures into readable errors.
 async def request(token=None, path='/api/admin/dashboard/summary'):
     messages = []
+    # Supply a request message to the in-process HTTP test.
     async def receive():
         return {'type': 'http.request', 'body': b'', 'more_body': False}
+    # Collect response messages so the test can inspect status and content.
     async def send(message):
         messages.append(message)
     headers = [] if token is None else [(b'authorization', ('Bearer ' + token).encode())]
     await app({'type': 'http', 'asgi': {'version': '3.0'}, 'http_version': '1.1', 'method': 'GET', 'scheme': 'http', 'path': path, 'raw_path': path.encode(), 'query_string': b'', 'headers': headers, 'server': ('test', 80), 'client': ('test', 1), 'root_path': ''}, receive, send)
     return next(m['status'] for m in messages if m['type'] == 'http.response.start'), json.loads(b''.join(m.get('body', b'') for m in messages if m['type'] == 'http.response.body'))
 
+# Group checks for admin summary.
 class AdminSummaryTests(unittest.TestCase):
+    # Prepare isolated fixtures before each test.
     def setUp(self):
         self.engine = create_engine('sqlite://', connect_args={'check_same_thread': False}, poolclass=StaticPool)
         self.metadata = MetaData()
@@ -41,23 +46,28 @@ class AdminSummaryTests(unittest.TestCase):
         self.db = Session(self.engine)
         app.dependency_overrides[get_db] = lambda: self.db
 
+    # Release test sessions and remove dependency overrides after each test.
     def tearDown(self):
         app.dependency_overrides.clear()
         self.db.close()
         self.engine.dispose()
 
+    # Check that no token 401.
     def test_no_token_401(self):
         self.assertEqual(asyncio.run(request())[0], 401)
 
+    # Check that parent 403.
     def test_parent_403(self):
         self.assertEqual(asyncio.run(request(create_token(2)))[0], 403)
 
+    # Check that inactive admin 403.
     def test_inactive_admin_403(self):
         # Production's enum currently allows only 'active'; simulate a future
         # inactive record at the lookup boundary without changing its schema.
         with patch.object(self.db, 'get', return_value=SimpleNamespace(role='admin', account_status='inactive')):
             self.assertEqual(asyncio.run(request(create_token(4)))[0], 403)
 
+    # Check that admin counts and missing tables.
     def test_admin_counts_and_missing_tables(self):
         status, body = asyncio.run(request(create_token(1)))
         self.assertEqual(status, 200)
@@ -69,6 +79,7 @@ class AdminSummaryTests(unittest.TestCase):
         self.assertNotIn('password', json.dumps(body))
         self.assertNotIn('email', json.dumps(body))
 
+    # Check that existing child table empty then populated.
     def test_existing_child_table_empty_then_populated(self):
         child = Table('Child', self.metadata, Column('child_id', Integer, primary_key=True))
         child.create(self.engine)
@@ -80,6 +91,7 @@ class AdminSummaryTests(unittest.TestCase):
         self.assertEqual(body['total_children'], 3)
         self.assertNotIn('total_children', body['unavailable_statistics'])
 
+    # Check that subscription without verified fields unavailable.
     def test_subscription_without_verified_fields_unavailable(self):
         Table('ParentSubscription', self.metadata, Column('id', Integer, primary_key=True)).create(self.engine)
         status, body = asyncio.run(request(create_token(1)))
@@ -87,11 +99,13 @@ class AdminSummaryTests(unittest.TestCase):
         self.assertIsNone(body['subscription_users'])
         self.assertIn('not defined', body['unavailable_statistics']['subscription_users'])
 
+    # Check that jwt role claim does not override database.
     def test_jwt_role_claim_does_not_override_database(self):
         now = datetime.now(timezone.utc)
         token = jwt.encode({'sub': '2', 'role': 'admin', 'iat': now, 'exp': now + timedelta(minutes=1), 'iss': 'juvcare', 'aud': 'juvcare-web'}, get_settings().JWT_SECRET.get_secret_value(), algorithm='HS256')
         self.assertEqual(asyncio.run(request(token))[0], 403)
 
+    # Check that invalid expired and deleted user 401.
     def test_invalid_expired_and_deleted_user_401(self):
         now = datetime.now(timezone.utc)
         expired = jwt.encode({'sub': '1', 'iat': now - timedelta(minutes=2), 'exp': now - timedelta(minutes=1), 'iss': 'juvcare', 'aud': 'juvcare-web'}, get_settings().JWT_SECRET.get_secret_value(), algorithm='HS256')
@@ -99,6 +113,7 @@ class AdminSummaryTests(unittest.TestCase):
             self.assertEqual(asyncio.run(request(token))[0], 401)
 
 
+    # Check that recent registrations security.
     def test_recent_registrations_security(self):
         path = '/api/admin/dashboard/recent-registrations'
         for token, expected in [(None, 401), ('invalid', 401), (create_token(2), 403), (create_token(1), 200)]:
@@ -106,6 +121,7 @@ class AdminSummaryTests(unittest.TestCase):
         with patch.object(self.db, 'get', return_value=SimpleNamespace(role='admin', account_status='inactive')):
             self.assertEqual(asyncio.run(request(create_token(4), path))[0], 403)
 
+    # Check that recent registrations are latest real rows with safe fields.
     def test_recent_registrations_are_latest_real_rows_with_safe_fields(self):
         users = self.metadata.tables['User']
         with self.engine.begin() as conn:
@@ -121,6 +137,7 @@ class AdminSummaryTests(unittest.TestCase):
         for row in rows:
             self.assertEqual(set(row), {'user_id', 'name', 'role', 'created_at'})
 
+    # Check that recent registrations empty database.
     def test_recent_registrations_empty_database(self):
         from app.routers.admin import recent_registrations
         self.db.execute(self.metadata.tables['User'].delete())

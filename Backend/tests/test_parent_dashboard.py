@@ -13,12 +13,15 @@ from app.models.user import User
 from app.routers.parent_dashboard import dashboard, parent_user
 
 
+# Group checks for parent dashboard.
 class ParentDashboardTests(unittest.TestCase):
+    # Prepare isolated fixtures before each test.
     def setUp(self):
         self.engine = create_engine('sqlite:///:memory:')
         self.addCleanup(self.engine.dispose)
         self.user = User(user_id=1, role='parent', account_status='active')
 
+    # Check that missing tables are unavailable not zero.
     def test_missing_tables_are_unavailable_not_zero(self):
         with Session(self.engine) as db:
             data = dashboard(self.user, db)
@@ -27,11 +30,13 @@ class ParentDashboardTests(unittest.TestCase):
             self.assertIsNone(data['guidance'])
             self.assertIn('Child', data['unavailable']['children'])
 
+    # Check that admin denied.
     def test_admin_denied(self):
         with self.assertRaises(HTTPException) as error:
             parent_user(User(role='admin'))
         self.assertEqual(error.exception.status_code, 403)
 
+    # Check that ownership chain and empty parent.
     def test_ownership_chain_and_empty_parent(self):
         with self.engine.begin() as c:
             for sql in [
@@ -59,6 +64,7 @@ class ParentDashboardTests(unittest.TestCase):
             self.assertEqual(empty['children'],[])
             self.assertEqual(empty['progress']['total'],0)
 
+    # Check that unverified ownership never reads children.
     def test_unverified_ownership_never_reads_children(self):
         with self.engine.begin() as c:
             c.execute(text('CREATE TABLE User (user_id INTEGER PRIMARY KEY)'))
@@ -69,6 +75,7 @@ class ParentDashboardTests(unittest.TestCase):
             self.assertIsNone(data['children'])
             self.assertIn('ownership',data['unavailable']['children'])
 
+    # Check that http authentication and role checks.
     def test_http_authentication_and_role_checks(self):
         from fastapi.testclient import TestClient
         from app.main import app

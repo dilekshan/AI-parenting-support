@@ -1,4 +1,5 @@
-﻿import { test } from 'node:test';
+﻿// Exercise this feature with controlled fixtures and assertions.
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import React from 'react';
@@ -15,6 +16,7 @@ const child = React.createElement('admin-screen');
 const active = role => ({ user_id: 1, name: 'Verified User', role, account_status: 'active' });
 const response = (data, status = 200) => new Response(JSON.stringify(data), { status });
 
+// Wait for account verification before checking what the route guard renders.
 async function renderGuard(requiredRole = 'admin') {
   let state, started = false;
   const guard = buildGuard(React, React.cloneElement, effect => { if (!started) { started = true; effect(); } }, () => [state, value => { state = value; }], 'redirect', auth.getCurrentUser);

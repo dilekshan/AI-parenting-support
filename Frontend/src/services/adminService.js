@@ -1,5 +1,6 @@
 ﻿import { authenticatedRequest } from './authService.js';
 
+// Check that totals are valid counts or explicitly unavailable values.
 export async function getDashboardSummary() {
   const data = await authenticatedRequest('/api/admin/dashboard/summary');
   const keys = ['total_children', 'total_parents', 'active_users', 'subscription_users'];
@@ -9,6 +10,7 @@ export async function getDashboardSummary() {
   return data;
 }
 
+// Accept only valid user summaries from the admin API.
 export async function getRecentRegistrations() {
   const data = await authenticatedRequest('/api/admin/dashboard/recent-registrations');
   if (!Array.isArray(data) || !data.every(row => Number.isSafeInteger(row.user_id)

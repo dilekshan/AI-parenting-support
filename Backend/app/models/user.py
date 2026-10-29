@@ -3,6 +3,7 @@ from sqlalchemy.dialects.mysql import ENUM
 from sqlalchemy.orm import object_session
 from app.database.base import Base
 
+# Map account fields to the existing User table.
 class User(Base):
     __tablename__ = "User"
     user_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -16,6 +17,7 @@ class User(Base):
     account_status = Column(ENUM("active"), nullable=False, server_default="active")
     created_at = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
 
+    # Expose a photo URL only when the optional photo reference is available.
     @property
     def profile_photo_url(self):
         # Auth queries defer this optional column until its migration is applied.

@@ -19,6 +19,7 @@ UPLOAD_DIR = Path(__file__).resolve().parents[2] / "uploads" / "profile-photos"
 MAX_BYTES = 2 * 1024 * 1024
 
 
+# Decode and re-encode supported images to remove source metadata.
 def sanitize_photo(data):
     try:
         with warnings.catch_warnings():
@@ -44,6 +45,7 @@ def sanitize_photo(data):
         raise HTTPException(422, 'Choose a valid JPG, JPEG, PNG or WebP image (maximum 16 million pixels).') from None
 
 
+# Save a unique image file and commit its reference to the verified owner.
 def save_photo(data, user, db):
     clean = sanitize_photo(data)
     filename = uuid.uuid4().hex + '.webp'
@@ -57,6 +59,7 @@ def save_photo(data, user, db):
         # No user ID comes from the request; only the verified JWT owner is updated.
         user.profile_photo = filename
         db.commit()
+    # Roll back failed saves and remove only the newly created image file.
     except (OSError, SQLAlchemyError):
         db.rollback()
         if created:
@@ -65,12 +68,14 @@ def save_photo(data, user, db):
     return {'profile_photo_url': '/api/profile-photos/' + filename}
 
 
+# Bound incoming image bytes before processing the authenticated upload.
 @router.post('/api/auth/me/profile-photo')
 async def upload_photo(request: Request, user: User = Depends(current_user), db: Session = Depends(get_db)):
     if user.role not in {'parent', 'admin'}:
         raise HTTPException(403, 'Parent or admin account required')
     # Raw body avoids multipart spool files and caps bytes as they arrive.
     data = bytearray()
+    # Stop oversized uploads while reading, before buffering more image data.
     async for chunk in request.stream():
         if len(data) + len(chunk) > MAX_BYTES:
             raise HTTPException(413, 'Profile photo must be 2 MB or smaller.')
@@ -80,6 +85,7 @@ async def upload_photo(request: Request, user: User = Depends(current_user), db:
     return await run_in_threadpool(save_photo, bytes(data), user, db)
 
 
+# Serve only safe generated image names, never arbitrary filesystem paths.
 @router.get('/api/profile-photos/{filename}')
 def serve_photo(filename: str):
     if not re.fullmatch(r'[0-9a-f]{32}\.webp', filename):

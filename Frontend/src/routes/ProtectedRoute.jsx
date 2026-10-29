@@ -2,8 +2,11 @@ import { cloneElement, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { getCurrentUser } from '../services/authService.js';
 
+// Verify the current account before showing a protected page.
 export default function ProtectedRoute({ children, requiredRole = 'parent' }) {
+  // Distinguish a pending account check from a confirmed signed-out state.
   const [user, setUser] = useState(undefined);
+  // Verify access on mount and ignore results after this route is removed.
   useEffect(() => {
     let active = true;
     getCurrentUser().then(profile => {

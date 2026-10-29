@@ -1,17 +1,39 @@
 import { useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { login, getCurrentUser, logout, startGoogleLogin } from '../../services/authService';
 import reference from '../../assets/images/login-reference.png';
 import './Login.css';
 
+// Manage sign-in feedback without changing the existing form design.
 export default function Login({ onLogin }) {
+  const location = useLocation();
   const navigate = useNavigate();
+  const emailInput = useRef(null);
   const submitting = useRef(false);
+  // Track password visibility, server feedback and whether a sign-in is pending.
   const [showPassword, setShowPassword] = useState(false);
-  const [notice, setNotice] = useState('');
+  const [notice, setNotice] = useState(() => location.state?.passwordResetMessage || '');
   const [loading, setLoading] = useState(false);
+
+  function handleForgotPassword(event) {
+    event.preventDefault();
+    if (loading) return;
+    const input = emailInput.current;
+    const email = input.value.trim();
+    input.value = email;
+    if (!email || !input.checkValidity()) {
+      setNotice('Please enter a valid email address before continuing.');
+      input.focus();
+      return;
+    }
+    setNotice('');
+    navigate('/forgot-password', { state: { email } });
+  }
+
+  // Wait for login and account verification before choosing a dashboard.
   async function handleSubmit(event) {
     event.preventDefault();
+    // Ignore repeated clicks while the current sign-in is still running.
     if (submitting.current || loading) return;
     const data = new FormData(event.currentTarget);
     submitting.current = true;
@@ -19,6 +41,7 @@ export default function Login({ onLogin }) {
     setNotice('Signing in...');
     try {
       await login({ email: data.get('email'), password: data.get('password') });
+      // Use the verified backend role before allowing dashboard navigation.
       const user = await getCurrentUser();
       if (!user || user.account_status !== 'active' || !['admin', 'parent'].includes(user.role)) {
         logout();
@@ -50,7 +73,7 @@ export default function Login({ onLogin }) {
             <label className="juv-login__sr-only" htmlFor="login-email">Email</label>
             <div className="juv-login__email">
               <svg className="juv-login__input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m3 5 9 7 9-7"/></svg>
-              <input id="login-email" name="email" type="email" autoComplete="username" placeholder="Email address" required />
+              <input ref={emailInput} id="login-email" name="email" type="email" autoComplete="username" placeholder="Email address" required />
             </div>
             <label className="juv-login__sr-only" htmlFor="login-password">Password</label>
             <div className="juv-login__password">
@@ -62,7 +85,7 @@ export default function Login({ onLogin }) {
             </div>
             <div className="juv-login__options">
               <label><input name="rememberMe" type="checkbox" /> Remember me</label>
-              <a href="/forgot-password">Forgot password?</a>
+              <Link to="/forgot-password" onClick={handleForgotPassword} aria-disabled={loading}>Forgot Password?</Link>
             </div>
             <button className="juv-login__submit" type="submit" disabled={loading}>Login <span aria-hidden="true">&#8594;</span></button>
             <div className="juv-login__social-divider">or continue with</div>

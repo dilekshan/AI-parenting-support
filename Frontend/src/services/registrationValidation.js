@@ -1,3 +1,4 @@
+// Validate names, email addresses and optional phone numbers before submission.
 export function validatePersonalDetails(values) {
   const name = values.name.trim();
   const email = values.email.replace(/[A-Z]/g, letter => letter.toLowerCase()).trimEnd();
@@ -17,10 +18,12 @@ export function validatePersonalDetails(values) {
     errors.email = 'Please enter a valid email address';
   }
   if (phone && !/^(?:(?:0|\+94|94)7[01245678][0-9]{7})$/.test(phone)) errors.phone = 'Please enter a valid Sri Lankan mobile number.';
+  // Use one phone format so equivalent inputs are stored consistently.
   const normalizedPhone = !phone ? null : phone.startsWith('0') ? '+94' + phone.slice(1) : phone.startsWith('+') ? phone : '+' + phone;
   return { errors, valid: Object.keys(errors).length === 0, normalized: { name, email, phone: normalizedPhone } };
 }
 
+// Explain missing password requirements and check the confirmation.
 export function validateAccountSecurity({ password, confirm }) {
   const errors = {};
   const missing = [];
